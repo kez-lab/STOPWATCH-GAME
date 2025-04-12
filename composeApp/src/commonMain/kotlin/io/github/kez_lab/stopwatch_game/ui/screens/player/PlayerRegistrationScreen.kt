@@ -1,6 +1,5 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.player
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import compose.icons.FeatherIcons
-import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.ArrowRight
 import compose.icons.feathericons.Plus
 import compose.icons.feathericons.Trash2
@@ -75,23 +73,6 @@ fun PlayerRegistrationScreen() {
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { 
-                            // 홈 화면으로 돌아가기 (백스택 초기화는 필요 없음)
-                            navigationController.navigateToWithPopUpTo(
-                                screen = Screen.Home,
-                                popUpTo = Screen.Home,
-                                inclusive = true
-                            )
-                        }
-                    ) {
-                        Icon(
-                            imageVector = FeatherIcons.ArrowLeft,
-                            contentDescription = "홈으로"
-                        )
-                    }
                 }
             )
         },
@@ -100,11 +81,10 @@ fun PlayerRegistrationScreen() {
                 Button(
                     onClick = {
                         appViewModel.registerPlayers(players)
-                        // 백스택 관리하여 뒤로가기 시 홈으로 가도록 설정
                         navigationController.navigateToWithPopUpTo(
                             screen = Screen.GameSelection,
                             popUpTo = Screen.Home,
-                            inclusive = false
+                            inclusive = true
                         )
                     },
                     modifier = Modifier
@@ -273,16 +253,16 @@ private fun PlayerItem(player: Player, onRemove: () -> Unit) {
                 modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Text(
                 text = player.name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
             )
-            
+
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = FeatherIcons.Trash2,

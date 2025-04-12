@@ -46,9 +46,9 @@ fun HomeScreen() {
 
     LaunchedEffect(Unit) {
         stage = HomeAnimationStage.TITLE
-        delay(800)
+        delay(400)
         stage = HomeAnimationStage.SUBTITLE
-        delay(800)
+        delay(400)
         stage = HomeAnimationStage.BUTTON
     }
 
@@ -78,8 +78,8 @@ fun HomeScreen() {
 @Composable
 private fun Title(visible: Boolean) {
     val transition = updateTransition(targetState = visible, label = "TitleTransition")
-    val alpha by transition.animateFloat({ tween(800) }, label = "alpha") { if (it) 1f else 0f }
-    val offsetY by transition.animateDp({ tween(800) }, label = "offsetY") { if (it) 0.dp else 30.dp }
+    val alpha by transition.animateFloat({ tween(400) }, label = "alpha") { if (it) 1f else 0f }
+    val offsetY by transition.animateDp({ tween(400) }, label = "offsetY") { if (it) 0.dp else 30.dp }
 
     Text(
         text = "TimeBattle",
@@ -96,7 +96,7 @@ private fun Title(visible: Boolean) {
 @Composable
 private fun Subtitle(visible: Boolean) {
     val transition = updateTransition(targetState = visible, label = "SubtitleTransition")
-    val alpha by transition.animateFloat({ tween(800) }, label = "alpha") { if (it) 1f else 0f }
+    val alpha by transition.animateFloat({ tween(400) }, label = "alpha") { if (it) 1f else 0f }
 
     Text(
         text = "친구들과 함께하는 스톱워치 미니게임",
