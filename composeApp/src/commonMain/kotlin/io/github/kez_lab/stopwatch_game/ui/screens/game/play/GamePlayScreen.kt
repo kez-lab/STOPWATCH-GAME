@@ -53,7 +53,7 @@ import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.ui.components.TimerButton
 import io.github.kez_lab.stopwatch_game.ui.components.TimerDisplay
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
-import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
+import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.GameTimerViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.TimerUiState
 import kotlinx.coroutines.delay
@@ -72,8 +72,11 @@ enum class GameScreenState {
  * 게임 플레이 화면
  */
 @Composable
-fun GamePlayScreen(navController: NavHostController, gameId: String) {
-    val appViewModel: AppViewModel = viewModel()
+fun GamePlayScreen(
+    navController: NavHostController, 
+    gameId: String
+) {
+    val appViewModel = LocalAppViewModel.current
     val timerViewModel: GameTimerViewModel = viewModel()
     val hapticFeedback = LocalHapticFeedback.current
 

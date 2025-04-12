@@ -78,7 +78,10 @@ fun HomeScreen(navController: NavHostController) {
 private fun Title(visible: Boolean) {
     val transition = updateTransition(targetState = visible, label = "TitleTransition")
     val alpha by transition.animateFloat({ tween(400) }, label = "alpha") { if (it) 1f else 0f }
-    val offsetY by transition.animateDp({ tween(400) }, label = "offsetY") { if (it) 0.dp else 30.dp }
+    val offsetY by transition.animateDp(
+        { tween(400) },
+        label = "offsetY"
+    ) { if (it) 0.dp else 30.dp }
 
     Text(
         text = "TimeBattle",

@@ -49,7 +49,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
@@ -61,7 +60,7 @@ import compose.icons.feathericons.Target
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
-import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
+import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 import kotlinx.coroutines.delay
 
 /**
@@ -69,7 +68,7 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun ResultScreen(navController: NavHostController) {
-    val appViewModel: AppViewModel = viewModel()
+    val appViewModel = LocalAppViewModel.current
 
     // 앱 상태
     val uiState by appViewModel.uiState.collectAsState()
