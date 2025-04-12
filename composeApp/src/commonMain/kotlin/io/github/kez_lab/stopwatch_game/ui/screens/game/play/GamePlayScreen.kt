@@ -88,7 +88,7 @@ fun GamePlayScreen(gameId: String) {
     // 화면 상태 관리
     var screenState by remember { mutableStateOf(GameScreenState.INFO) }
     var countdown by remember { mutableStateOf(3) }
-    
+
     // 뒤로가기 확인 다이얼로그 상태
     var showBackConfirmation by remember { mutableStateOf(false) }
 
@@ -98,11 +98,11 @@ fun GamePlayScreen(gameId: String) {
         appViewModel.calculateRanks()
         navigationController.navigateToWithPopUpTo(
             screen = Screen.Result,
-            popUpTo = Screen.GameSelection,
-            inclusive = false
+            popUpTo = Screen.GamePlay(gameId),
+            inclusive = true
         )
     }
-    
+
     // 뒤로가기 처리 함수
     val handleBackPress = {
         when {
@@ -263,7 +263,7 @@ fun GamePlayScreen(gameId: String) {
                 }
             }
         }
-        
+
         // 뒤로가기 확인 다이얼로그
         if (showBackConfirmation) {
             AlertDialog(
