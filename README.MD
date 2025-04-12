@@ -75,10 +75,10 @@ TimeBattle은 친구들과 함께 즐길 수 있는 스톱워치 기반 미니�
 - `./gradlew :composeApp:run` 명령으로 실행
 - 핫 리로드: `./gradlew :composeApp:runHot`
 
+## 스크린샷
 ### Figma MCP 초안
 <img src="screenshots/figma-mcp.png" alt="홈 화면" width="600"/>
 
-## 스크린샷
 <table>
   <tr>
     <td><img src="screenshots/home.png" alt="홈 화면" width="200"/></td>
