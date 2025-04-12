@@ -68,7 +68,7 @@ fun HomeScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(80.dp))
             StartButton(
                 visible = stage >= HomeAnimationStage.BUTTON,
-                onClick = { navController.navigate(Routes.PLAYER_REGISTRATION) }
+                onClick = { navController.navigate(Routes.PlayerRegistration) }
             )
         }
     }

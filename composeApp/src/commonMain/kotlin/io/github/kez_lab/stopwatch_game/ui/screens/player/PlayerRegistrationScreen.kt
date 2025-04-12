@@ -81,8 +81,8 @@ fun PlayerRegistrationScreen(navController: NavHostController) {
                 Button(
                     onClick = {
                         appViewModel.registerPlayers(players)
-                        navController.navigate(Routes.GAME_SELECTION) {
-                            popUpTo(Routes.HOME) {
+                        navController.navigate(Routes.GameSelection) {
+                            popUpTo(Routes.Home) {
                                 inclusive = true
                             }
                         }

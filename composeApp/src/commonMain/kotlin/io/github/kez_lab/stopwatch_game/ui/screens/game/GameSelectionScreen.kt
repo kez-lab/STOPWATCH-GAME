@@ -118,7 +118,7 @@ fun GameSelectionScreen(navController: NavHostController) {
                         onClick = {
                             val randomGame = games.random()
                             appViewModel.selectGame(randomGame.id)
-                            navController.navigate(Routes.gamePlay(randomGame.id))
+                            navController.navigate(Routes.GamePlay(randomGame.id))
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -151,7 +151,7 @@ fun GameSelectionScreen(navController: NavHostController) {
                         game = game,
                         onClick = {
                             appViewModel.selectGame(game.id)
-                            navController.navigate(Routes.gamePlay(game.id))
+                            navController.navigate(Routes.GamePlay(game.id))
                         }
                     )
                 }

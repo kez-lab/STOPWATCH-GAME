@@ -1,29 +1,34 @@
 package io.github.kez_lab.stopwatch_game.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import io.github.kez_lab.stopwatch_game.ui.screens.game.GameSelectionScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.game.play.GamePlayScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.home.HomeScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.player.PlayerRegistrationScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.result.ResultScreen
+import kotlinx.serialization.Serializable
 
 // 앱 내 라우트 정의
-object Routes {
-    const val HOME = "home"
-    const val PLAYER_REGISTRATION = "player_registration"
-    const val GAME_SELECTION = "game_selection"
-    const val GAME_PLAY = "game_play/{gameId}"
-    const val RESULT = "result"
+@Serializable
+sealed class Routes(val route: String) {
+    @Serializable
+    data object Home : Routes("home")
 
-    // 매개변수가 있는 경로를 위한 도우미 함수
-    fun gamePlay(gameId: String) = "game_play/$gameId"
+    @Serializable
+    data object PlayerRegistration : Routes("player_registration")
+
+    @Serializable
+    data object GameSelection : Routes("game_selection")
+
+    @Serializable
+    data class GamePlay(val gameId: String) : Routes("game_play")
+
+    @Serializable
+    data object Result : Routes("result")
 }
 
 /**
@@ -32,30 +37,29 @@ object Routes {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    
-    NavHost(navController = navController, startDestination = Routes.HOME) {
-        composable(Routes.HOME) {
-            HomeScreen(navController)
+
+    NavHost(
+        navController = navController,
+        startDestination = Routes.Home::class
+    ) {
+        composable<Routes.Home> {
+            HomeScreen(navController = navController)
         }
-        
-        composable(Routes.PLAYER_REGISTRATION) {
-            PlayerRegistrationScreen(navController)
+        composable<Routes.PlayerRegistration> {
+            PlayerRegistrationScreen(navController = navController)
         }
-        
-        composable(Routes.GAME_SELECTION) {
-            GameSelectionScreen(navController)
+        composable<Routes.GameSelection> {
+            GameSelectionScreen(navController = navController)
         }
-        
-        composable(
-            route = Routes.GAME_PLAY,
-            arguments = listOf(navArgument("gameId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val gameId = backStackEntry.arguments?.getString("gameId") ?: ""
-            GamePlayScreen(navController, gameId)
+        composable<Routes.GamePlay> { backStackEntry ->
+            val args = backStackEntry.toRoute<Routes.GamePlay>()
+            GamePlayScreen(
+                navController = navController,
+                gameId = args.gameId
+            )
         }
-        
-        composable(Routes.RESULT) {
-            ResultScreen(navController)
+        composable<Routes.Result> {
+            ResultScreen(navController = navController)
         }
     }
 }

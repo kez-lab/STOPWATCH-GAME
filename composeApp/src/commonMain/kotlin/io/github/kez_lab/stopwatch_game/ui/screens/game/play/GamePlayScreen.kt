@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavOptions
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.ArrowRight
@@ -96,8 +95,8 @@ fun GamePlayScreen(navController: NavHostController, gameId: String) {
     val finishGame = {
         // 결과 계산 후 결과 화면으로 이동 (게임 플레이 화면까지 제거)
         appViewModel.calculateRanks()
-        navController.navigate(Routes.RESULT) {
-            popUpTo(Routes.gamePlay(gameId)) {
+        navController.navigate(Routes.Result) {
+            popUpTo(Routes.GamePlay(gameId)) {
                 inclusive = true
             }
         }
@@ -125,6 +124,8 @@ fun GamePlayScreen(navController: NavHostController, gameId: String) {
                     finishGame()
                 }
             }
+
+            else -> Unit
         }
     }
 

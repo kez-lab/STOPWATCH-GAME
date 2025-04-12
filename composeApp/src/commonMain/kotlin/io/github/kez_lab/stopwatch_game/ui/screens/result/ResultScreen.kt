@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavOptions
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.Award
@@ -81,8 +80,8 @@ fun ResultScreen(navController: NavHostController) {
 
     // 게임 선택으로 돌아가기
     val navigateToGameSelection = {
-        navController.navigate(Routes.GAME_SELECTION) {
-            popUpTo(Routes.RESULT) {
+        navController.navigate(Routes.GameSelection) {
+            popUpTo(Routes.Result) {
                 inclusive = true
             }
         }
@@ -136,9 +135,9 @@ fun ResultScreen(navController: NavHostController) {
                 // 홈으로 버튼
                 IconButton(
                     onClick = {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.HOME) {
-                                inclusive = true
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Home) {
+                                inclusive = false
                             }
                         }
                     }
@@ -231,8 +230,8 @@ fun ResultScreen(navController: NavHostController) {
                     onClick = {
                         uiState.selectedGame?.let { game ->
                             appViewModel.prepareNewGame()
-                            navController.navigate(Routes.gamePlay(game.id)) {
-                                popUpTo(Routes.GAME_SELECTION) {
+                            navController.navigate(Routes.GamePlay(game.id)) {
+                                popUpTo(Routes.GameSelection) {
                                     inclusive = true
                                 }
                             }
