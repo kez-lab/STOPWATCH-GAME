@@ -34,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,10 +46,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
@@ -80,6 +84,32 @@ fun ResultScreen() {
     var showPunishment by remember { mutableStateOf(false) }
     var showCongrats by remember { mutableStateOf(true) }
     
+    // 게임 선택으로 돌아가기
+    val navigateToGameSelection = {
+        appViewModel.prepareNewGame()
+        navigationController.navigateToWithPopUpTo(
+            screen = Screen.GameSelection,
+            popUpTo = Screen.Home,
+            inclusive = false
+        )
+    }
+    
+    // 라이프사이클 이벤트 처리
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // 화면이 다시 표시될 때 백스택을 수정하여 뒤로가기 시 게임으로 돌아가지 않도록 함
+                navigationController.clearBackStack()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
     // 벌칙 선택
     LaunchedEffect(Unit) {
         delay(3000) // 축하 화면 잠시 보여주기
@@ -109,11 +139,11 @@ fun ResultScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 뒤로가기 버튼
-                IconButton(onClick = { navigationController.goBack() }) {
+                // 뒤로가기 버튼 - 게임 선택 화면으로 이동
+                IconButton(onClick = navigateToGameSelection) {
                     Icon(
                         imageVector = FeatherIcons.ArrowLeft,
-                        contentDescription = "뒤로 가기"
+                        contentDescription = "게임 선택으로"
                     )
                 }
                 
@@ -126,7 +156,11 @@ fun ResultScreen() {
                 )
                 
                 // 홈으로 버튼
-                IconButton(onClick = { navigationController.navigateTo(Screen.Home) }) {
+                IconButton(
+                    onClick = { 
+                        navigationController.navigateWithClearBackStack(Screen.Home) 
+                    }
+                ) {
                     Icon(
                         imageVector = FeatherIcons.Home,
                         contentDescription = "홈으로",
@@ -213,10 +247,14 @@ fun ResultScreen() {
                 // 다시 하기 버튼
                 Button(
                     onClick = {
-                        // 같은 게임으로 다시 시작
+                        // 같은 게임으로 다시 시작 (백스택 초기화)
                         selectedGame?.let {
                             appViewModel.prepareNewGame()
-                            navigationController.navigateTo(Screen.GamePlay(it.id))
+                            navigationController.navigateToWithPopUpTo(
+                                screen = Screen.GamePlay(it.id),
+                                popUpTo = Screen.GameSelection,
+                                inclusive = false
+                            )
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -237,10 +275,7 @@ fun ResultScreen() {
                 
                 // 게임 선택으로 버튼
                 Button(
-                    onClick = {
-                        appViewModel.prepareNewGame()
-                        navigationController.navigateTo(Screen.GameSelection)
-                    }
+                    onClick = navigateToGameSelection
                 ) {
                     Text(text = "다른 게임 선택")
                 }
