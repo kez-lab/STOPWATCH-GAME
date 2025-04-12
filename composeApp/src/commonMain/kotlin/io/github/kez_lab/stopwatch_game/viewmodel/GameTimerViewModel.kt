@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
@@ -27,6 +28,9 @@ class GameTimerViewModel : ViewModel() {
     
     // 타이머 시작 시간
     private var startTimeMillis: Long = 0
+    
+    // UI 업데이트 간격 (16ms = 약 60FPS)
+    private val UI_UPDATE_INTERVAL = 16L
     
     // 목표 시간 설정
     fun setTargetTime(targetTimeMillis: Long) {
@@ -71,10 +75,12 @@ class GameTimerViewModel : ViewModel() {
         }
         
         timerJob = viewModelScope.launch {
-            while (true) {
+            while (isActive) {
+                // 현재 시간에서 시작 시간을 빼서 정확한 경과 시간 계산
                 val currentTime = System.currentTimeMillis()
                 val elapsedTime = currentTime - startTimeMillis
                 
+                // UI 상태 업데이트
                 _uiState.update { currentState ->
                     currentState.copy(
                         elapsedTime = elapsedTime,
@@ -94,7 +100,8 @@ class GameTimerViewModel : ViewModel() {
                     break
                 }
                 
-                delay(10) // 10ms 간격으로 업데이트
+                // UI 업데이트 간격만큼 대기 (약 60FPS)
+                delay(UI_UPDATE_INTERVAL)
             }
         }
     }
@@ -104,6 +111,7 @@ class GameTimerViewModel : ViewModel() {
         timerJob?.cancel()
         timerJob = null
         
+        // 정확한 최종 경과 시간 계산 
         val currentTime = System.currentTimeMillis()
         val finalElapsedTime = currentTime - startTimeMillis
         
