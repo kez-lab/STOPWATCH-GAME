@@ -83,8 +83,8 @@ fun ResultScreen() {
     val navigateToGameSelection = {
         navigationController.navigateToWithPopUpTo(
             screen = Screen.GameSelection,
-            popUpTo = Screen.Home,
-            inclusive = false
+            popUpTo = Screen.Result,
+            inclusive = true
         )
     }
 
@@ -118,7 +118,9 @@ fun ResultScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 뒤로가기 버튼 - 게임 선택 화면으로 이동
-                IconButton(onClick = navigateToGameSelection) {
+                IconButton(onClick = {
+                    navigationController.goBack()
+                }) {
                     Icon(
                         imageVector = FeatherIcons.ArrowLeft,
                         contentDescription = "게임 선택으로"
@@ -231,11 +233,10 @@ fun ResultScreen() {
                     onClick = {
                         uiState.selectedGame?.let { game ->
                             appViewModel.prepareNewGame()
-                            // 백스택 관리하여 게임 선택 화면에서 시작
                             navigationController.navigateToWithPopUpTo(
                                 screen = Screen.GamePlay(game.id),
                                 popUpTo = Screen.GameSelection,
-                                inclusive = false
+                                inclusive = true
                             )
                         }
                     },
