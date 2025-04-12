@@ -1,5 +1,8 @@
 package io.github.kez_lab.stopwatch_game.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,21 +17,21 @@ import kotlinx.serialization.Serializable
 
 // 앱 내 라우트 정의
 @Serializable
-sealed class Routes(val route: String) {
+sealed class Routes {
     @Serializable
-    data object Home : Routes("home")
+    data object Home : Routes()
 
     @Serializable
-    data object PlayerRegistration : Routes("player_registration")
+    data object PlayerRegistration : Routes()
 
     @Serializable
-    data object GameSelection : Routes("game_selection")
+    data object GameSelection : Routes()
 
     @Serializable
-    data class GamePlay(val gameId: String) : Routes("game_play")
+    data class GamePlay(val gameId: String) : Routes()
 
     @Serializable
-    data object Result : Routes("result")
+    data object Result : Routes()
 }
 
 /**
@@ -40,7 +43,19 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Home::class
+        startDestination = Routes.Home::class,
+        enterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 150))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 150))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 150))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 150))
+        }
     ) {
         composable<Routes.Home> {
             HomeScreen(navController = navController)

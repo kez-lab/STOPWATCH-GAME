@@ -1,10 +1,5 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.game.play
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -45,7 +40,6 @@ import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.ArrowRight
-import compose.icons.feathericons.RefreshCw
 import compose.icons.feathericons.User
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
@@ -73,7 +67,7 @@ enum class GameScreenState {
  */
 @Composable
 fun GamePlayScreen(
-    navController: NavHostController, 
+    navController: NavHostController,
     gameId: String
 ) {
     val appViewModel = LocalAppViewModel.current
@@ -159,25 +153,7 @@ fun GamePlayScreen(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
             }
 
-            GameScreenState.RESULT -> {
-                // 결과 화면 잠시 보여주기
-                delay(1500)
-
-                // 다음 플레이어가 있으면 계속, 아니면 결과 화면으로
-                val hasNextPlayer = appViewModel.moveToNextPlayer()
-
-                if (hasNextPlayer) {
-                    // 타이머 초기화하고 같은 화면 유지
-                    timerViewModel.resetTimer()
-                    screenState = GameScreenState.INFO
-                    countdown = 3
-                } else {
-                    finishGame()
-                }
-            }
-
-            else -> { /* 다른 상태는 처리 없음 */
-            }
+            else -> Unit
         }
     }
 
@@ -203,6 +179,9 @@ fun GamePlayScreen(
 
             // 결과 저장
             appViewModel.saveGameResult(result)
+
+            // 약간의 지연 후 결과 화면으로 전환 (시각적 피드백을 위해)
+            delay(300)
             screenState = GameScreenState.RESULT
         }
     }
@@ -225,45 +204,44 @@ fun GamePlayScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 화면 상태에 따른 콘텐츠 표시
-            AnimatedContent(
-                targetState = screenState,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) togetherWith
-                            fadeOut(animationSpec = tween(300))
-                },
-                label = "Game Screen Content"
-            ) { state ->
-                when (state) {
-                    GameScreenState.INFO -> {
-                        game?.let {
-                            GameInfoCard(
-                                game = it,
-                                targetTime = timerUiState.formattedTargetTime,
-                                onStartGame = { screenState = GameScreenState.COUNTDOWN }
-                            )
+            when (screenState) {
+                GameScreenState.INFO -> {
+                    game?.let {
+                        GameInfoCard(
+                            game = it,
+                            targetTime = timerUiState.formattedTargetTime,
+                            onStartGame = { screenState = GameScreenState.COUNTDOWN }
+                        )
+                    }
+                }
+
+                GameScreenState.COUNTDOWN -> {
+                    CountdownDisplay(countdown = countdown)
+                }
+
+                GameScreenState.PLAYING -> {
+                    GamePlayContent(
+                        timerUiState = timerUiState,
+                        onStopClick = { timerViewModel.stopTimer() },
+                        onStartClick = { timerViewModel.startTimer() },
+                    )
+                }
+
+                GameScreenState.RESULT -> {
+                    GameResultContent(
+                        timerUiState = timerUiState,
+                        gameType = game?.gameType ?: GameType.EXACT_STOP,
+                        onNextButtonClicked = {
+                            val hasNextPlayer = appViewModel.moveToNextPlayer()
+                            if (hasNextPlayer) {
+                                countdown = 3
+                                timerViewModel.resetTimer()
+                                screenState = GameScreenState.COUNTDOWN
+                            } else {
+                                finishGame()
+                            }
                         }
-                    }
-
-                    GameScreenState.COUNTDOWN -> {
-                        CountdownDisplay(countdown = countdown)
-                    }
-
-                    GameScreenState.PLAYING -> {
-                        GamePlayContent(
-                            timerUiState = timerUiState,
-                            onStopClick = { timerViewModel.stopTimer() },
-                            onStartClick = { timerViewModel.startTimer() },
-                            onResetClick = { timerViewModel.resetTimer() }
-                        )
-                    }
-
-                    GameScreenState.RESULT -> {
-                        GameResultContent(
-                            timerUiState = timerUiState,
-                            gameType = game?.gameType ?: GameType.EXACT_STOP
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -408,7 +386,6 @@ private fun GamePlayContent(
     timerUiState: TimerUiState,
     onStopClick: () -> Unit,
     onStartClick: () -> Unit,
-    onResetClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -417,31 +394,44 @@ private fun GamePlayContent(
     ) {
         // 목표 시간이 있는 게임은 표시
         if (timerUiState.targetTime > 0 && timerUiState.gameType == GameType.EXACT_STOP) {
-            Text(
-                text = "목표 시간: ${timerUiState.formattedTargetTime}",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Text(
+                    text = "목표 시간: ${timerUiState.formattedTargetTime}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // 타이머 표시
-        TimerDisplay(
-            time = timerUiState.formattedTime,
-            isRunning = timerUiState.isRunning,
-            isTimeout = timerUiState.isTimeout,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-        )
+        ) {
+            TimerDisplay(
+                displayTime = timerUiState.formattedTime,
+                isRunning = timerUiState.isRunning,
+                isFinished = timerUiState.isFinished
+            )
+        }
 
         Spacer(modifier = Modifier.height(60.dp))
 
         // 타이머 컨트롤 버튼
         TimerButton(
             isRunning = timerUiState.isRunning,
+            isFinished = timerUiState.isFinished,
             onClick = {
                 if (timerUiState.isRunning) {
                     onStopClick()
@@ -450,29 +440,6 @@ private fun GamePlayContent(
                 }
             }
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // 타이머 리셋 버튼
-        if (!timerUiState.isRunning && !timerUiState.isFinished) {
-            Button(
-                onClick = onResetClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.RefreshCw,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-
-                Spacer(modifier = Modifier.size(8.dp))
-
-                Text(text = "다시 시작하기")
-            }
-        }
     }
 }
 
@@ -482,7 +449,8 @@ private fun GamePlayContent(
 @Composable
 private fun GameResultContent(
     timerUiState: TimerUiState,
-    gameType: GameType
+    gameType: GameType,
+    onNextButtonClicked: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -501,38 +469,79 @@ private fun GameResultContent(
                 text = "완료!",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.tertiary
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "기록: ${timerUiState.formattedTime}",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+        // 고정된 결과 표시를 위해 isFinished 파라미터 추가
+        val resultTime = remember { timerUiState.formattedTime }
+        TimerDisplay(
+            displayTime = resultTime,
+            isFinished = true,
         )
 
         // ms의 신 게임이면 끝자리 표시
         if (gameType == GameType.MS_DIGIT && timerUiState.lastDigit >= 0) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "끝자리: ${timerUiState.lastDigit}",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.tertiary
-            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "끝자리: ${timerUiState.lastDigit}",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                )
+            }
         }
 
         // 목표 시간과의 차이 표시 (정확히 멈춰! 게임)
         if (gameType == GameType.EXACT_STOP) {
             Spacer(modifier = Modifier.height(16.dp))
 
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (timerUiState.timeDifference < 100)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "차이: ${timerUiState.formattedDifference}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                )
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        Button(
+            onClick = onNextButtonClicked,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            enabled = true
+        ) {
             Text(
-                text = "차이: ${timerUiState.formattedDifference}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
+                text = "다음",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .padding(
+                        vertical = 8.dp,
+                        horizontal = 8.dp
+                    )
             )
         }
     }
@@ -607,4 +616,4 @@ private fun GameInfoCard(
             }
         }
     }
-} 
+}
