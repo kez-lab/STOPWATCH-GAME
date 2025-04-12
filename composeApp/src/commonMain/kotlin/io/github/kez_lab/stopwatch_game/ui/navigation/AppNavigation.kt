@@ -22,7 +22,12 @@ sealed class Screen {
 // 네비게이션 컨트롤러 인터페이스
 interface NavigationController {
     fun navigateTo(screen: Screen)
+    fun navigateToWithPopUpTo(screen: Screen, popUpTo: Screen? = null, inclusive: Boolean = false)
+    fun navigateWithClearBackStack(screen: Screen)
+    fun replaceCurrentScreen(screen: Screen)
     fun goBack()
+    fun clearBackStack()
+    fun backStackSize(): Int
 }
 
 // 네비게이션 컨트롤러 CompositionLocal
@@ -41,8 +46,28 @@ fun AppNavigation() {
                 navigationState.navigateTo(screen)
             }
             
+            override fun navigateToWithPopUpTo(screen: Screen, popUpTo: Screen?, inclusive: Boolean) {
+                navigationState.navigateToWithPopUpTo(screen, popUpTo, inclusive)
+            }
+            
+            override fun navigateWithClearBackStack(screen: Screen) {
+                navigationState.navigateWithClearBackStack(screen)
+            }
+            
+            override fun replaceCurrentScreen(screen: Screen) {
+                navigationState.replaceCurrentScreen(screen)
+            }
+            
             override fun goBack() {
                 navigationState.goBack()
+            }
+            
+            override fun clearBackStack() {
+                navigationState.clearBackStack()
+            }
+            
+            override fun backStackSize(): Int {
+                return navigationState.backStackSize()
             }
         }
     }
