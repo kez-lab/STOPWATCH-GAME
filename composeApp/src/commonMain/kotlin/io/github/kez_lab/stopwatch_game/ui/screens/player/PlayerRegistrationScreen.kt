@@ -56,9 +56,10 @@ import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerRegistrationScreen(navController: NavHostController) {
-    val appViewModel: AppViewModel = viewModel()
-
+fun PlayerRegistrationScreen(
+    navController: NavHostController,
+    appViewModel: AppViewModel
+) {
     val players = remember { mutableStateListOf<Player>() }
     var newPlayerName by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }

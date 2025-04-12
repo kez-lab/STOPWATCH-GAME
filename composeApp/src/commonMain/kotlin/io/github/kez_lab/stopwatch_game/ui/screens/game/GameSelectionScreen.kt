@@ -43,9 +43,10 @@ import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
  * 게임 선택 화면
  */
 @Composable
-fun GameSelectionScreen(navController: NavHostController) {
-    val appViewModel: AppViewModel = viewModel()
-    
+fun GameSelectionScreen(
+    navController: NavHostController,
+    appViewModel: AppViewModel
+) {
     // 게임 목록
     val games = remember { GameRepository.games }
     

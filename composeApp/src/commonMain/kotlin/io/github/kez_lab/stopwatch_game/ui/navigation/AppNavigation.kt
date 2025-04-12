@@ -10,6 +10,7 @@ import io.github.kez_lab.stopwatch_game.ui.screens.game.play.GamePlayScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.home.HomeScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.player.PlayerRegistrationScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.result.ResultScreen
+import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 import kotlinx.serialization.Serializable
 
 // 앱 내 라우트 정의
@@ -35,7 +36,7 @@ sealed class Routes(val route: String) {
  * 앱의 메인 네비게이션 구성요소
  */
 @Composable
-fun AppNavigation() {
+fun AppNavigation(appViewModel: AppViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -43,23 +44,24 @@ fun AppNavigation() {
         startDestination = Routes.Home::class
     ) {
         composable<Routes.Home> {
-            HomeScreen(navController = navController)
+            HomeScreen(navController = navController, appViewModel = appViewModel)
         }
         composable<Routes.PlayerRegistration> {
-            PlayerRegistrationScreen(navController = navController)
+            PlayerRegistrationScreen(navController = navController, appViewModel = appViewModel)
         }
         composable<Routes.GameSelection> {
-            GameSelectionScreen(navController = navController)
+            GameSelectionScreen(navController = navController, appViewModel = appViewModel)
         }
         composable<Routes.GamePlay> { backStackEntry ->
             val args = backStackEntry.toRoute<Routes.GamePlay>()
             GamePlayScreen(
                 navController = navController,
-                gameId = args.gameId
+                gameId = args.gameId,
+                appViewModel = appViewModel
             )
         }
         composable<Routes.Result> {
-            ResultScreen(navController = navController)
+            ResultScreen(navController = navController, appViewModel = appViewModel)
         }
     }
 }

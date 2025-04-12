@@ -72,8 +72,11 @@ enum class GameScreenState {
  * 게임 플레이 화면
  */
 @Composable
-fun GamePlayScreen(navController: NavHostController, gameId: String) {
-    val appViewModel: AppViewModel = viewModel()
+fun GamePlayScreen(
+    navController: NavHostController, 
+    gameId: String,
+    appViewModel: AppViewModel
+) {
     val timerViewModel: GameTimerViewModel = viewModel()
     val hapticFeedback = LocalHapticFeedback.current
 
