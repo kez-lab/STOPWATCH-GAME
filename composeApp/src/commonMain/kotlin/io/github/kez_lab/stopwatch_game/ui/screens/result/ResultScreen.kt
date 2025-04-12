@@ -68,9 +68,8 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun ResultScreen(navController: NavHostController) {
-    // CompositionLocal을 통해 AppViewModel 접근
     val appViewModel = LocalAppViewModel.current
-    
+
     // 앱 상태
     val uiState by appViewModel.uiState.collectAsState()
 

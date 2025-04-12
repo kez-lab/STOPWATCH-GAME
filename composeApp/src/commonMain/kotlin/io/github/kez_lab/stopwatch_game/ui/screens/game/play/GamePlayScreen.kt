@@ -76,7 +76,6 @@ fun GamePlayScreen(
     navController: NavHostController, 
     gameId: String
 ) {
-    // CompositionLocal을 통해 AppViewModel 접근
     val appViewModel = LocalAppViewModel.current
     val timerViewModel: GameTimerViewModel = viewModel()
     val hapticFeedback = LocalHapticFeedback.current

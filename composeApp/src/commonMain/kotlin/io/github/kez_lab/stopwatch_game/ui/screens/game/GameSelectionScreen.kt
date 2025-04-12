@@ -44,7 +44,6 @@ import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
  */
 @Composable
 fun GameSelectionScreen(navController: NavHostController) {
-    // CompositionLocal을 통해 AppViewModel 접근
     val appViewModel = LocalAppViewModel.current
     
     // 게임 목록

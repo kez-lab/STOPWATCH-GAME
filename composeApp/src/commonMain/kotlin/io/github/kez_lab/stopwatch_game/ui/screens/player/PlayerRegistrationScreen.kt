@@ -40,9 +40,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavOptions
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowRight
 import compose.icons.feathericons.Plus
@@ -57,9 +55,8 @@ import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerRegistrationScreen(navController: NavHostController) {
-    // CompositionLocal을 통해 AppViewModel 접근
     val appViewModel = LocalAppViewModel.current
-    
+
     val players = remember { mutableStateListOf<Player>() }
     var newPlayerName by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
