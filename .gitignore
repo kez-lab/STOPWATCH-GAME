@@ -1,17 +1,66 @@
-
-*.iml
-.gradle
-.idea
-.kotlin
-.DS_Store
-build
-*/build
-captures
-.externalNativeBuild
-.cxx
+# Gradle
+.gradle/
+build/
+*/build/
 local.properties
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+.kotlin/
+
+# Android Studio
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Xcode
 xcuserdata/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
 Pods/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Kotlin
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# Compose Multiplatform
+.compose/
+compose-desktop.jks
 *.jks
 *.gpg
+
+# SQLDelight
+sqldelight/
+
+# Generated files
+bin/
+gen/
+out/
+
+# Node.js
 *yarn.lock
