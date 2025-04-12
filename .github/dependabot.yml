@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # GitHub Actions 자동 업데이트 설정
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions" 
