@@ -212,6 +212,7 @@ fun ResultScreen(navController: NavHostController) {
                         uiState.selectedGame?.let { game ->
                             appViewModel.selectGame(game.id)
                             navController.navigate(Routes.GamePlay(game.id)) {
+                                launchSingleTop = true
                                 popUpTo(Routes.Result) {
                                     inclusive = true
                                 }

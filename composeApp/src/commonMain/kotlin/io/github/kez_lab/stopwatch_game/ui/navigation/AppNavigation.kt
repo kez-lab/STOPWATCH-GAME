@@ -1,5 +1,8 @@
 package io.github.kez_lab.stopwatch_game.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,7 +43,19 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Home::class
+        startDestination = Routes.Home::class,
+        enterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 150))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 150))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 150))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 150))
+        }
     ) {
         composable<Routes.Home> {
             HomeScreen(navController = navController)
