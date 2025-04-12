@@ -1,6 +1,7 @@
 package io.github.kez_lab.stopwatch_game.utils
 
 import kotlin.math.abs
+import kotlin.random.Random
 
 /**
  * 시간 관련 유틸리티 함수들
@@ -50,6 +51,6 @@ object TimeUtils {
      * @return 랜덤 시간 (밀리초)
      */
     fun generateRandomTargetTime(minSeconds: Int = 3, maxSeconds: Int = 10): Long {
-        return (minSeconds * 1000L + (Math.random() * ((maxSeconds - minSeconds) * 1000)).toLong())
+        return (minSeconds * 1000L + (Random.nextInt() * ((maxSeconds - minSeconds) * 1000)).toLong())
     }
 } 

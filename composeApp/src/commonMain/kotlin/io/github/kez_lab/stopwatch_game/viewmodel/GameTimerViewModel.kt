@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlin.math.abs
 
 /**
  * 게임 타이머 뷰모델
@@ -64,7 +66,7 @@ class GameTimerViewModel : ViewModel() {
     fun startTimer() {
         if (timerJob != null) return
         
-        startTimeMillis = System.currentTimeMillis()
+        startTimeMillis = Clock.System.now().epochSeconds
         _uiState.update { currentState ->
             currentState.copy(
                 isRunning = true,
@@ -77,7 +79,7 @@ class GameTimerViewModel : ViewModel() {
         timerJob = viewModelScope.launch {
             while (isActive) {
                 // 현재 시간에서 시작 시간을 빼서 정확한 경과 시간 계산
-                val currentTime = System.currentTimeMillis()
+                val currentTime = Clock.System.now().epochSeconds
                 val elapsedTime = currentTime - startTimeMillis
                 
                 // UI 상태 업데이트
@@ -112,7 +114,7 @@ class GameTimerViewModel : ViewModel() {
         timerJob = null
         
         // 정확한 최종 경과 시간 계산 
-        val currentTime = System.currentTimeMillis()
+        val currentTime = Clock.System.now().epochSeconds
         val finalElapsedTime = currentTime - startTimeMillis
         
         // ms의 신 게임에서 끝자리 숫자 계산
@@ -172,7 +174,7 @@ data class TimerUiState(
 ) {
     // 목표 시간과의 차이 계산
     val timeDifference: Long
-        get() = if (targetTime > 0) Math.abs(elapsedTime - targetTime) else 0
+        get() = if (targetTime > 0) abs(elapsedTime - targetTime) else 0
         
     // 포맷팅된 시간 차이
     val formattedDifference: String

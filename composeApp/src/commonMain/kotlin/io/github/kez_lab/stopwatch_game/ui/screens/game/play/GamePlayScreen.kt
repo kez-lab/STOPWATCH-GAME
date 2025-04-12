@@ -48,7 +48,6 @@ import io.github.kez_lab.stopwatch_game.ui.components.TimerButton
 import io.github.kez_lab.stopwatch_game.ui.components.TimerDisplay
 import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
 import io.github.kez_lab.stopwatch_game.ui.navigation.Screen
-import io.github.kez_lab.stopwatch_game.utils.TimeUtils
 import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.GameTimerViewModel
 import kotlinx.coroutines.delay
@@ -369,13 +368,6 @@ fun GamePlayScreen(gameId: String) {
                         text = "기록: ${timerUiState.formattedTime}",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
-                    )
-                    
-                    // 항상 TimerDisplay 컴포넌트를 사용하여 결과 시간 표시
-                    SmallTimerDisplay(
-                        time = timerUiState.formattedTime,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.primary
                     )
                     
                     // ms의 신 게임이면 끝자리 표시

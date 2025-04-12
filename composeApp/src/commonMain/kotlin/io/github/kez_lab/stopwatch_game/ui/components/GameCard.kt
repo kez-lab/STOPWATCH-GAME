@@ -23,8 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import compose.icons.FeatherIcons
-import compose.icons.feathericons.Clock
 import compose.icons.feathericons.AlertCircle
+import compose.icons.feathericons.Clock
 import compose.icons.feathericons.Star
 import compose.icons.feathericons.Users
 import compose.icons.feathericons.ZapOff
@@ -36,7 +36,6 @@ import io.github.kez_lab.stopwatch_game.model.GameType
  * @param game 게임 정보
  * @param onClick 클릭 이벤트 핸들러
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameCard(
     game: Game,
@@ -67,9 +66,9 @@ fun GameCard(
                 modifier = Modifier.size(48.dp),
                 tint = getGameColor(game.gameType)
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -80,9 +79,9 @@ fun GameCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 // 게임 설명
                 Text(
                     text = game.description,
@@ -91,9 +90,9 @@ fun GameCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // 난이도 표시
                 Row {
                     repeat(5) { index ->
@@ -102,8 +101,8 @@ fun GameCard(
                             imageVector = FeatherIcons.Star,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = if (filled) MaterialTheme.colorScheme.primary 
-                                  else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            tint = if (filled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                     }

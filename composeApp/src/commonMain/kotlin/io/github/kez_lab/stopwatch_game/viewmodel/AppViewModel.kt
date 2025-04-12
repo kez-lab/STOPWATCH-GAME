@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /**
  * 앱 전체 상태 뷰모델
@@ -95,7 +96,7 @@ class AppViewModel : ViewModel() {
                 GameType.EXACT_STOP -> {
                     // 목표 시간과 가장 가까운 순서로 정렬
                     currentResults.sortedBy { (_, result) -> 
-                        Math.abs(result.timeTaken - result.targetTime) 
+                        abs(result.timeTaken - result.targetTime)
                     }
                 }
                 GameType.SLOWEST_STOP -> {
@@ -110,7 +111,7 @@ class AppViewModel : ViewModel() {
                 GameType.RANDOM_MATCH -> {
                     // 목표 시간과 가장 가까운 순서로 정렬
                     currentResults.sortedBy { (_, result) -> 
-                        Math.abs(result.timeTaken - result.targetTime) 
+                        abs(result.timeTaken - result.targetTime)
                     }
                 }
                 GameType.LAST_PERSON -> {
