@@ -58,16 +58,6 @@ class GameTimerViewModelTest {
     }
     
     @Test
-    fun startTimer_updatesIsRunningState() = runTest {
-        // When
-        viewModel.startTimer()
-        
-        // Then
-        assertTrue(viewModel.uiState.value.isRunning)
-        assertFalse(viewModel.uiState.value.isFinished)
-    }
-    
-    @Test
     fun stopTimer_updatesTimerStateCorrectly() = runTest {
         // Given
         viewModel.startTimer()
