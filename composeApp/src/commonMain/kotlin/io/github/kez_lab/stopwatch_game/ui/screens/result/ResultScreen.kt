@@ -94,6 +94,17 @@ fun ResultScreen() {
         )
     }
     
+    // 게임 다시하기 - 백스택 완전히 초기화
+    val restartGame = {
+        selectedGame?.let {
+            appViewModel.prepareNewGame()
+            // 백스택을 완전히 초기화하고 게임 화면으로 이동
+            navigationController.navigateWithClearBackStack(Screen.GameSelection)
+            // GameSelection에서 바로 게임으로 이동
+            navigationController.navigateTo(Screen.GamePlay(it.id))
+        }
+    }
+    
     // 라이프사이클 이벤트 처리
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -246,17 +257,7 @@ fun ResultScreen() {
             ) {
                 // 다시 하기 버튼
                 Button(
-                    onClick = {
-                        // 같은 게임으로 다시 시작 (백스택 초기화)
-                        selectedGame?.let {
-                            appViewModel.prepareNewGame()
-                            navigationController.navigateToWithPopUpTo(
-                                screen = Screen.GamePlay(it.id),
-                                popUpTo = Screen.GameSelection,
-                                inclusive = false
-                            )
-                        }
-                    },
+                    onClick = restartGame,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer

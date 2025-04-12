@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,11 +37,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
@@ -64,6 +68,22 @@ fun PlayerRegistrationScreen() {
     val players = remember { mutableStateListOf<Player>() }
     var newPlayerName by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+    
+    // 라이프사이클 이벤트 처리
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // 화면이 다시 표시될 때 백스택을 수정하여 예상치 못한 방식으로 돌아가지 않도록 함
+                navigationController.clearBackStack()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -78,11 +98,14 @@ fun PlayerRegistrationScreen() {
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navigationController.goBack() }
+                        onClick = { 
+                            // 홈 화면으로 직접 이동 (백스택 초기화)
+                            navigationController.navigateWithClearBackStack(Screen.Home)
+                        }
                     ) {
                         Icon(
                             imageVector = FeatherIcons.ArrowLeft,
-                            contentDescription = "뒤로가기"
+                            contentDescription = "홈으로"
                         )
                     }
                 }
@@ -93,7 +116,12 @@ fun PlayerRegistrationScreen() {
                 Button(
                     onClick = {
                         appViewModel.registerPlayers(players)
-                        navigationController.navigateTo(Screen.GameSelection)
+                        // 백스택 관리하여 뒤로가기 시 홈으로 가도록 설정
+                        navigationController.navigateToWithPopUpTo(
+                            screen = Screen.GameSelection,
+                            popUpTo = Screen.Home,
+                            inclusive = false
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -162,6 +190,23 @@ fun PlayerRegistrationScreen() {
     }
 }
 
+// 플레이어 추가 함수
+private fun addPlayer(
+    name: String,
+    players: MutableList<Player>,
+    callback: (String, Boolean) -> Unit
+) {
+    val trimmedName = name.trim()
+    if (trimmedName.isEmpty()) {
+        callback("", true)
+        return
+    }
+
+    // 플레이어 추가
+    players.add(Player(name = trimmedName))
+    callback("", false) // 입력 필드 초기화
+}
+
 @Composable
 private fun InputSection(
     name: String,
@@ -223,6 +268,49 @@ private fun ColumnScope.PlayerList(players: List<Player>, onRemove: (Player) -> 
 }
 
 @Composable
+private fun PlayerItem(player: Player, onRemove: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = FeatherIcons.User,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Text(
+                text = player.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
+            
+            IconButton(onClick = onRemove) {
+                Icon(
+                    imageVector = FeatherIcons.Trash2,
+                    contentDescription = "삭제",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun ColumnScope.EmptyPlayerHint() {
     Box(
         modifier = Modifier
@@ -246,77 +334,6 @@ private fun ColumnScope.EmptyPlayerHint() {
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
-        }
-    }
-}
-
-@Composable
-private fun BottomGuide(show: Boolean) {
-    AnimatedVisibility(visible = show) {
-        Text(
-            text = "🎉 모두 등록했어요! 다음을 눌러 게임을 선택해 주세요",
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-private fun addPlayer(
-    name: String,
-    players: MutableList<Player>,
-    onResult: (newName: String, error: Boolean) -> Unit
-) {
-    if (name.isBlank()) {
-        onResult(name, true)
-        return
-    }
-
-    if (players.size >= 6) return
-
-    players.add(Player(name = name.trim()))
-    onResult("", false)
-}
-
-@Composable
-private fun PlayerItem(player: Player, onRemove: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = FeatherIcons.User,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = player.name,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(onClick = onRemove) {
-                Icon(
-                    imageVector = FeatherIcons.Trash2,
-                    contentDescription = "삭제",
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
         }
     }
 }
