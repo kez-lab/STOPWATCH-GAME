@@ -63,6 +63,8 @@ object TimeUtils {
      * @return 랜덤 시간 (밀리초)
      */
     fun generateRandomTargetTime(minSeconds: Int = 3, maxSeconds: Int = 10): Long {
-        return (minSeconds * 1000L + (Random.nextInt() * ((maxSeconds - minSeconds) * 1000)).toLong())
+        val randomSeconds = Random.nextInt(minSeconds, maxSeconds + 1)
+        val randomMillis = Random.nextInt(0, 1000)
+        return (randomSeconds * 1000L) + randomMillis
     }
 } 

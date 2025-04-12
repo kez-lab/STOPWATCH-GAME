@@ -28,11 +28,11 @@ class GameTimerViewModel : ViewModel() {
     // 타이머 작업
     private var timerJob: Job? = null
     
-    // 타이머 시작 시간
+    // 타이머 시작 시간 (밀리초 단위로 저장)
     private var startTimeMillis: Long = 0
     
-    // UI 업데이트 간격 (16ms = 약 60FPS)
-    private val UI_UPDATE_INTERVAL = 16L
+    // UI 업데이트 간격 (33ms = 약 30FPS, 배터리 소모 줄임)
+    private val UI_UPDATE_INTERVAL = 33L
     
     // 목표 시간 설정
     fun setTargetTime(targetTimeMillis: Long) {
@@ -66,7 +66,8 @@ class GameTimerViewModel : ViewModel() {
     fun startTimer() {
         if (timerJob != null) return
         
-        startTimeMillis = Clock.System.now().epochSeconds
+        // 밀리초 단위로 정확히 시작 시간 저장
+        startTimeMillis = Clock.System.now().toEpochMilliseconds()
         _uiState.update { currentState ->
             currentState.copy(
                 isRunning = true,
@@ -77,33 +78,38 @@ class GameTimerViewModel : ViewModel() {
         }
         
         timerJob = viewModelScope.launch {
-            while (isActive) {
-                // 현재 시간에서 시작 시간을 빼서 정확한 경과 시간 계산
-                val currentTime = Clock.System.now().epochSeconds
-                val elapsedTime = currentTime - startTimeMillis
-                
-                // UI 상태 업데이트
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        elapsedTime = elapsedTime,
-                        formattedTime = TimeUtils.formatTime(elapsedTime)
-                    )
+            try {
+                while (isActive) {
+                    // 현재 시간에서 시작 시간을 빼서 정확한 경과 시간 계산 (밀리초 단위)
+                    val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
+                    val elapsedTimeMillis = currentTimeMillis - startTimeMillis
+                    
+                    // UI 상태 업데이트
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            elapsedTime = elapsedTimeMillis,
+                            formattedTime = TimeUtils.formatTime(elapsedTimeMillis)
+                        )
+                    }
+                    
+                    // 게임 타입에 따른 자동 종료 로직
+                    val shouldAutoStop = when (_uiState.value.gameType) {
+                        GameType.SLOWEST_STOP -> elapsedTimeMillis > _uiState.value.targetTime
+                        GameType.LAST_PERSON -> elapsedTimeMillis > _uiState.value.targetTime
+                        else -> false
+                    }
+                    
+                    if (shouldAutoStop) {
+                        stopTimer(true)
+                        break
+                    }
+                    
+                    // UI 업데이트 간격만큼 대기
+                    delay(UI_UPDATE_INTERVAL)
                 }
-                
-                // 게임 타입에 따른 자동 종료 로직
-                val shouldAutoStop = when (_uiState.value.gameType) {
-                    GameType.SLOWEST_STOP -> elapsedTime > _uiState.value.targetTime
-                    GameType.LAST_PERSON -> elapsedTime > _uiState.value.targetTime
-                    else -> false
-                }
-                
-                if (shouldAutoStop) {
-                    stopTimer(true)
-                    break
-                }
-                
-                // UI 업데이트 간격만큼 대기 (약 60FPS)
-                delay(UI_UPDATE_INTERVAL)
+            } catch (e: Exception) {
+                // 예외 처리
+                resetTimer()
             }
         }
     }
@@ -113,24 +119,29 @@ class GameTimerViewModel : ViewModel() {
         timerJob?.cancel()
         timerJob = null
         
-        // 정확한 최종 경과 시간 계산 
-        val currentTime = Clock.System.now().epochSeconds
-        val finalElapsedTime = currentTime - startTimeMillis
-        
-        // ms의 신 게임에서 끝자리 숫자 계산
-        val lastDigit = if (_uiState.value.gameType == GameType.MS_DIGIT) {
-            TimeUtils.getLastDigit(finalElapsedTime)
-        } else -1
-        
-        _uiState.update { currentState ->
-            currentState.copy(
-                isRunning = false,
-                isFinished = true,
-                elapsedTime = finalElapsedTime,
-                formattedTime = TimeUtils.formatTime(finalElapsedTime),
-                isTimeout = isTimeout,
-                lastDigit = lastDigit
-            )
+        try {
+            // 정확한 최종 경과 시간 계산 (밀리초 단위)
+            val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
+            val finalElapsedTimeMillis = currentTimeMillis - startTimeMillis
+            
+            // ms의 신 게임에서 끝자리 숫자 계산
+            val lastDigit = if (_uiState.value.gameType == GameType.MS_DIGIT) {
+                TimeUtils.getLastDigit(finalElapsedTimeMillis)
+            } else -1
+            
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isRunning = false,
+                    isFinished = true,
+                    elapsedTime = finalElapsedTimeMillis,
+                    formattedTime = TimeUtils.formatTime(finalElapsedTimeMillis),
+                    isTimeout = isTimeout,
+                    lastDigit = lastDigit
+                )
+            }
+        } catch (e: Exception) {
+            // 예외 발생 시 기본값으로 설정
+            resetTimer()
         }
     }
     
