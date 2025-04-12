@@ -27,7 +27,7 @@ jobs:
         run: chmod +x ./gradlew
       
       - name: Run tests
-        run: ./gradlew :composeApp:testCommonTestDebugUnitTest
+        run: ./gradlew :composeApp:testDebugUnitTest
       
       - name: Upload test reports
         uses: actions/upload-artifact@v4

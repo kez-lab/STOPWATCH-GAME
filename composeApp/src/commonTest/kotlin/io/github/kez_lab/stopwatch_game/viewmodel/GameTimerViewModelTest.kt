@@ -1,7 +1,6 @@
 package io.github.kez_lab.stopwatch_game.viewmodel
 
 import io.github.kez_lab.stopwatch_game.model.GameType
-import io.github.kez_lab.stopwatch_game.utils.TimeUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
