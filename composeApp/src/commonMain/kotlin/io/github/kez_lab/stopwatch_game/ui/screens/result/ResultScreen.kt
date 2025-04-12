@@ -34,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,13 +45,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
@@ -61,7 +57,6 @@ import compose.icons.feathericons.Clock
 import compose.icons.feathericons.Home
 import compose.icons.feathericons.Play
 import compose.icons.feathericons.Target
-import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
@@ -76,51 +71,23 @@ import kotlinx.coroutines.delay
 fun ResultScreen() {
     val navigationController = LocalNavigationController.current
     val appViewModel: AppViewModel = viewModel()
-    
+
     // 앱 상태
     val uiState by appViewModel.uiState.collectAsState()
-    
+
     // 화면 상태
     var showPunishment by remember { mutableStateOf(false) }
     var showCongrats by remember { mutableStateOf(true) }
-    
+
     // 게임 선택으로 돌아가기
     val navigateToGameSelection = {
-        appViewModel.prepareNewGame()
         navigationController.navigateToWithPopUpTo(
             screen = Screen.GameSelection,
             popUpTo = Screen.Home,
             inclusive = false
         )
     }
-    
-    // 게임 다시하기 - 백스택 완전히 초기화
-    val restartGame = {
-        selectedGame?.let {
-            appViewModel.prepareNewGame()
-            // 백스택을 완전히 초기화하고 게임 화면으로 이동
-            navigationController.navigateWithClearBackStack(Screen.GameSelection)
-            // GameSelection에서 바로 게임으로 이동
-            navigationController.navigateTo(Screen.GamePlay(it.id))
-        }
-    }
-    
-    // 라이프사이클 이벤트 처리
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                // 화면이 다시 표시될 때 백스택을 수정하여 뒤로가기 시 게임으로 돌아가지 않도록 함
-                navigationController.clearBackStack()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-    
+
     // 벌칙 선택
     LaunchedEffect(Unit) {
         delay(3000) // 축하 화면 잠시 보여주기
@@ -128,15 +95,15 @@ fun ResultScreen() {
         showCongrats = false
         showPunishment = true
     }
-    
+
     // 결과 정보
     val gameResults = uiState.rankedResults
     val selectedGame = uiState.selectedGame
-    
+
     // 승자/패자
     val winner = gameResults.firstOrNull()?.first
     val loser = gameResults.lastOrNull()?.first
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -157,7 +124,7 @@ fun ResultScreen() {
                         contentDescription = "게임 선택으로"
                     )
                 }
-                
+
                 Text(
                     text = "게임 결과",
                     fontSize = 24.sp,
@@ -165,11 +132,15 @@ fun ResultScreen() {
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
-                
+
                 // 홈으로 버튼
                 IconButton(
-                    onClick = { 
-                        navigationController.navigateWithClearBackStack(Screen.Home) 
+                    onClick = {
+                        navigationController.navigateToWithPopUpTo(
+                            screen = Screen.Home,
+                            popUpTo = Screen.Home,
+                            inclusive = true
+                        )
                     }
                 ) {
                     Icon(
@@ -179,9 +150,9 @@ fun ResultScreen() {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // 게임 이름
             selectedGame?.let { game ->
                 Text(
@@ -193,9 +164,9 @@ fun ResultScreen() {
                     textAlign = TextAlign.Center
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // 축하 화면
             AnimatedVisibility(
                 visible = showCongrats,
@@ -206,7 +177,7 @@ fun ResultScreen() {
                     WinnerCelebration(player = it)
                 }
             }
-            
+
             // 벌칙 화면
             AnimatedVisibility(
                 visible = showPunishment,
@@ -221,9 +192,9 @@ fun ResultScreen() {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // 결과 목록
             Text(
                 text = "순위표",
@@ -231,7 +202,7 @@ fun ResultScreen() {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            
+
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
@@ -247,9 +218,9 @@ fun ResultScreen() {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // 하단 버튼
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -257,7 +228,17 @@ fun ResultScreen() {
             ) {
                 // 다시 하기 버튼
                 Button(
-                    onClick = restartGame,
+                    onClick = {
+                        uiState.selectedGame?.let { game ->
+                            appViewModel.prepareNewGame()
+                            // 백스택 관리하여 게임 선택 화면에서 시작
+                            navigationController.navigateToWithPopUpTo(
+                                screen = Screen.GamePlay(game.id),
+                                popUpTo = Screen.GameSelection,
+                                inclusive = false
+                            )
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -268,12 +249,12 @@ fun ResultScreen() {
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
-                    
+
                     Spacer(modifier = Modifier.size(8.dp))
-                    
+
                     Text(text = "다시 하기")
                 }
-                
+
                 // 게임 선택으로 버튼
                 Button(
                     onClick = navigateToGameSelection
@@ -307,7 +288,7 @@ private fun WinnerCelebration(player: Player) {
             ),
             label = "Trophy Scale"
         )
-        
+
         Icon(
             imageVector = FeatherIcons.Award,
             contentDescription = null,
@@ -316,26 +297,26 @@ private fun WinnerCelebration(player: Player) {
                 .scale(scale),
             tint = MaterialTheme.colorScheme.primary
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "축하합니다!",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = player.name,
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = "승리했습니다!",
             fontSize = 20.sp,
@@ -376,18 +357,18 @@ private fun PunishmentCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = playerName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -405,9 +386,9 @@ private fun PunishmentCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = punishmentDescription,
                         fontSize = 16.sp,
@@ -441,8 +422,8 @@ private fun ResultItem(
             defaultElevation = 2.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = if (isWinner) MaterialTheme.colorScheme.primaryContainer 
-                            else MaterialTheme.colorScheme.surface
+            containerColor = if (isWinner) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -478,9 +459,9 @@ private fun ResultItem(
                     color = if (rank <= 3) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             Spacer(modifier = Modifier.size(16.dp))
-            
+
             // 플레이어 이름
             Text(
                 text = player.name,
@@ -488,22 +469,22 @@ private fun ResultItem(
                 fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal,
                 modifier = Modifier.weight(1f)
             )
-            
+
             // 아이콘 (게임 타입에 따라)
             val icon = when (gameType) {
                 GameType.EXACT_STOP, GameType.RANDOM_MATCH -> FeatherIcons.Target
                 else -> FeatherIcons.Clock
             }
-            
+
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
             )
-            
+
             Spacer(modifier = Modifier.size(8.dp))
-            
+
             // 시간 또는 특수값 표시
             if (gameType == GameType.MS_DIGIT && specialValue >= 0) {
                 Text(

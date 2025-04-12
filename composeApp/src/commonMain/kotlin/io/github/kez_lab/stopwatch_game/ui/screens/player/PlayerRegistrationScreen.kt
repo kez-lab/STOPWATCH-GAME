@@ -29,7 +29,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,14 +36,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
@@ -68,22 +64,6 @@ fun PlayerRegistrationScreen() {
     val players = remember { mutableStateListOf<Player>() }
     var newPlayerName by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
-    
-    // 라이프사이클 이벤트 처리
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                // 화면이 다시 표시될 때 백스택을 수정하여 예상치 못한 방식으로 돌아가지 않도록 함
-                navigationController.clearBackStack()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -99,8 +79,12 @@ fun PlayerRegistrationScreen() {
                 navigationIcon = {
                     IconButton(
                         onClick = { 
-                            // 홈 화면으로 직접 이동 (백스택 초기화)
-                            navigationController.navigateWithClearBackStack(Screen.Home)
+                            // 홈 화면으로 돌아가기 (백스택 초기화는 필요 없음)
+                            navigationController.navigateToWithPopUpTo(
+                                screen = Screen.Home,
+                                popUpTo = Screen.Home,
+                                inclusive = true
+                            )
                         }
                     ) {
                         Icon(
