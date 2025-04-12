@@ -1,0 +1,212 @@
+package io.github.kez_lab.stopwatch_game.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import io.github.kez_lab.stopwatch_game.model.Game
+import io.github.kez_lab.stopwatch_game.model.GameRepository
+import io.github.kez_lab.stopwatch_game.model.GameResult
+import io.github.kez_lab.stopwatch_game.model.GameType
+import io.github.kez_lab.stopwatch_game.model.Player
+import io.github.kez_lab.stopwatch_game.model.Punishment
+import io.github.kez_lab.stopwatch_game.model.PunishmentRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+/**
+ * 앱 전체 상태 뷰모델
+ */
+class AppViewModel : ViewModel() {
+    // 내부 상태
+    private val _uiState = MutableStateFlow(AppUiState())
+    
+    // 외부에 노출되는 상태
+    val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
+    
+    // 플레이어 등록
+    fun registerPlayers(players: List<Player>) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                players = players,
+                currentPlayerIndex = 0
+            )
+        }
+    }
+    
+    // 게임 선택
+    fun selectGame(gameId: String) {
+        val game = GameRepository.getGameById(gameId)
+        game?.let {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    selectedGame = it
+                )
+            }
+        }
+    }
+    
+    // 다음 플레이어로 이동
+    fun moveToNextPlayer(): Boolean {
+        val currentIndex = _uiState.value.currentPlayerIndex
+        val totalPlayers = _uiState.value.players.size
+        
+        if (currentIndex >= totalPlayers - 1) {
+            return false // 모든 플레이어가 플레이 완료
+        }
+        
+        _uiState.update { currentState ->
+            currentState.copy(
+                currentPlayerIndex = currentState.currentPlayerIndex + 1
+            )
+        }
+        return true
+    }
+    
+    // 게임 결과 저장
+    fun saveGameResult(result: GameResult) {
+        val currentPlayerIndex = _uiState.value.currentPlayerIndex
+        val updatedPlayers = _uiState.value.players.toMutableList()
+        
+        // 현재 플레이어의 결과 저장
+        updatedPlayers[currentPlayerIndex].gameResults.add(result)
+        
+        // 결과 목록에 추가
+        val updatedResults = _uiState.value.currentGameResults.toMutableList()
+        updatedResults.add(Pair(updatedPlayers[currentPlayerIndex], result))
+        
+        _uiState.update { currentState ->
+            currentState.copy(
+                players = updatedPlayers,
+                currentGameResults = updatedResults
+            )
+        }
+    }
+    
+    // 게임 결과 정렬 및 순위 계산
+    fun calculateRanks() {
+        viewModelScope.launch {
+            val currentResults = _uiState.value.currentGameResults
+            val game = _uiState.value.selectedGame ?: return@launch
+            
+            // 게임 타입에 따라 정렬 기준 설정
+            val sortedResults = when (game.gameType) {
+                GameType.EXACT_STOP -> {
+                    // 목표 시간과 가장 가까운 순서로 정렬
+                    currentResults.sortedBy { (_, result) -> 
+                        Math.abs(result.timeTaken - result.targetTime) 
+                    }
+                }
+                GameType.SLOWEST_STOP -> {
+                    // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
+                    val limitTime = 10000L // 10초
+                    currentResults.filter { (_, result) -> 
+                        result.timeTaken <= limitTime 
+                    }.sortedByDescending { (_, result) -> 
+                        result.timeTaken 
+                    }
+                }
+                GameType.RANDOM_MATCH -> {
+                    // 목표 시간과 가장 가까운 순서로 정렬
+                    currentResults.sortedBy { (_, result) -> 
+                        Math.abs(result.timeTaken - result.targetTime) 
+                    }
+                }
+                GameType.LAST_PERSON -> {
+                    // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
+                    val limitTime = 15000L // 15초
+                    currentResults.filter { (_, result) -> 
+                        result.timeTaken <= limitTime 
+                    }.sortedByDescending { (_, result) -> 
+                        result.timeTaken 
+                    }
+                }
+                GameType.MS_DIGIT -> {
+                    // ms 끝자리 숫자가 큰 순서로 정렬
+                    currentResults.sortedByDescending { (_, result) -> 
+                        result.specialValue 
+                    }
+                }
+            }
+            
+            // 순위 부여 및 승자 설정
+            val rankedResults = sortedResults.mapIndexed { index, (player, result) ->
+                val updatedResult = result.copy(
+                    rank = index + 1,
+                    isWinner = index == 0
+                )
+                
+                // 플레이어의 결과 업데이트
+                val playerIndex = _uiState.value.players.indexOf(player)
+                if (playerIndex >= 0) {
+                    val gameResultIndex = _uiState.value.players[playerIndex].gameResults.indexOf(result)
+                    if (gameResultIndex >= 0) {
+                        _uiState.value.players[playerIndex].gameResults[gameResultIndex] = updatedResult
+                    }
+                }
+                
+                Pair(player, updatedResult)
+            }
+            
+            // 승자에게 점수 부여
+            if (rankedResults.isNotEmpty()) {
+                val winner = rankedResults.first().first
+                val winnerIndex = _uiState.value.players.indexOf(winner)
+                if (winnerIndex >= 0) {
+                    val updatedPlayers = _uiState.value.players.toMutableList()
+                    updatedPlayers[winnerIndex] = updatedPlayers[winnerIndex].copy(
+                        score = updatedPlayers[winnerIndex].score + 1
+                    )
+                    
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            players = updatedPlayers,
+                            rankedResults = rankedResults
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    // 벌칙 선택
+    fun selectRandomPunishment() {
+        val punishment = PunishmentRepository.getRandomPunishment()
+        _uiState.update { currentState ->
+            currentState.copy(
+                selectedPunishment = punishment
+            )
+        }
+    }
+    
+    // 새 게임 시작 준비
+    fun prepareNewGame() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                currentGameResults = emptyList(),
+                rankedResults = emptyList(),
+                selectedGame = null,
+                selectedPunishment = null,
+                currentPlayerIndex = 0
+            )
+        }
+    }
+}
+
+/**
+ * 앱 UI 상태 클래스
+ */
+data class AppUiState(
+    val players: List<Player> = emptyList(),
+    val currentPlayerIndex: Int = 0,
+    val selectedGame: Game? = null,
+    val currentGameResults: List<Pair<Player, GameResult>> = emptyList(),
+    val rankedResults: List<Pair<Player, GameResult>> = emptyList(),
+    val selectedPunishment: Punishment? = null
+) {
+    val currentPlayer: Player?
+        get() = if (players.isNotEmpty() && currentPlayerIndex < players.size) {
+            players[currentPlayerIndex]
+        } else null
+} 
