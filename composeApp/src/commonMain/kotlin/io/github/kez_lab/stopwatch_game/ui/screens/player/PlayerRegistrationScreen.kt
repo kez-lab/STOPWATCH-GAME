@@ -52,14 +52,14 @@ import compose.icons.feathericons.UserPlus
 import compose.icons.feathericons.Users
 import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
-import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
+import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerRegistrationScreen(
-    navController: NavHostController,
-    appViewModel: AppViewModel
-) {
+fun PlayerRegistrationScreen(navController: NavHostController) {
+    // CompositionLocal을 통해 AppViewModel 접근
+    val appViewModel = LocalAppViewModel.current
+    
     val players = remember { mutableStateListOf<Player>() }
     var newPlayerName by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }

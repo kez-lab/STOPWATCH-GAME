@@ -37,16 +37,16 @@ import compose.icons.feathericons.Shuffle
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.ui.components.GameCard
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
-import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
+import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 
 /**
  * 게임 선택 화면
  */
 @Composable
-fun GameSelectionScreen(
-    navController: NavHostController,
-    appViewModel: AppViewModel
-) {
+fun GameSelectionScreen(navController: NavHostController) {
+    // CompositionLocal을 통해 AppViewModel 접근
+    val appViewModel = LocalAppViewModel.current
+    
     // 게임 목록
     val games = remember { GameRepository.games }
     

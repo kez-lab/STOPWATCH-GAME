@@ -1,10 +1,9 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.home
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.Image
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,16 +36,11 @@ import compose.icons.FeatherIcons
 import compose.icons.feathericons.PlayCircle
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import kotlinx.coroutines.delay
-import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 
 enum class HomeAnimationStage { NONE, TITLE, SUBTITLE, BUTTON }
 
 @Composable
-fun HomeScreen(
-    navController: NavHostController,
-    appViewModel: AppViewModel
-) {
-    val uiState by appViewModel.uiState.collectAsState()
+fun HomeScreen(navController: NavHostController) {
     var stage by remember { mutableStateOf(HomeAnimationStage.NONE) }
 
     LaunchedEffect(Unit) {
@@ -84,7 +78,10 @@ fun HomeScreen(
 private fun Title(visible: Boolean) {
     val transition = updateTransition(targetState = visible, label = "TitleTransition")
     val alpha by transition.animateFloat({ tween(400) }, label = "alpha") { if (it) 1f else 0f }
-    val offsetY by transition.animateDp({ tween(400) }, label = "offsetY") { if (it) 0.dp else 30.dp }
+    val offsetY by transition.animateDp(
+        { tween(400) },
+        label = "offsetY"
+    ) { if (it) 0.dp else 30.dp }
 
     Text(
         text = "TimeBattle",
