@@ -160,24 +160,10 @@ fun GamePlayScreen(
             }
 
             GameScreenState.RESULT -> {
-                // 결과 화면 잠시 보여주기
-                delay(1500)
-
-                // 다음 플레이어가 있으면 계속, 아니면 결과 화면으로
-                val hasNextPlayer = appViewModel.moveToNextPlayer()
-
-                if (hasNextPlayer) {
-                    // 타이머 초기화하고 같은 화면 유지
-                    timerViewModel.resetTimer()
-                    screenState = GameScreenState.INFO
-                    countdown = 3
-                } else {
-                    finishGame()
-                }
+                // 별도의 조치 없음 - 결과가 변경되지 않도록
             }
 
-            else -> { /* 다른 상태는 처리 없음 */
-            }
+            else -> { /* 다른 상태는 처리 없음 */ }
         }
     }
 
@@ -203,7 +189,30 @@ fun GamePlayScreen(
 
             // 결과 저장
             appViewModel.saveGameResult(result)
+            
+            // 약간의 지연 후 결과 화면으로 전환 (시각적 피드백을 위해)
+            delay(300)
             screenState = GameScreenState.RESULT
+        }
+    }
+
+    // 다음 플레이어로 자동 전환 (결과 화면 이후)
+    LaunchedEffect(screenState) {
+        if (screenState == GameScreenState.RESULT) {
+            // 결과 화면 충분히 보여주기
+            delay(1500)
+
+            // 다음 플레이어가 있으면 계속, 아니면 결과 화면으로
+            val hasNextPlayer = appViewModel.moveToNextPlayer()
+
+            if (hasNextPlayer) {
+                // 타이머 초기화하고 같은 화면 유지
+                timerViewModel.resetTimer()
+                screenState = GameScreenState.INFO
+                countdown = 3
+            } else {
+                finishGame()
+            }
         }
     }
 
@@ -225,12 +234,12 @@ fun GamePlayScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 화면 상태에 따른 콘텐츠 표시
+            // 화면 상태에 따른 콘텐츠 표시 - 애니메이션 개선
             AnimatedContent(
                 targetState = screenState,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) togetherWith
-                            fadeOut(animationSpec = tween(300))
+                    fadeIn(animationSpec = tween(400, easing = androidx.compose.animation.core.FastOutSlowInEasing)) togetherWith
+                            fadeOut(animationSpec = tween(200))
                 },
                 label = "Game Screen Content"
             ) { state ->
@@ -427,7 +436,7 @@ private fun GamePlayContent(
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // 타이머 표시
+        // 타이머 표시 - isRunning과 isTimeout 상태 전달
         TimerDisplay(
             time = timerUiState.formattedTime,
             isRunning = timerUiState.isRunning,
@@ -439,9 +448,10 @@ private fun GamePlayContent(
 
         Spacer(modifier = Modifier.height(60.dp))
 
-        // 타이머 컨트롤 버튼
+        // 타이머 컨트롤 버튼 - isFinished 상태 전달
         TimerButton(
             isRunning = timerUiState.isRunning,
+            isFinished = timerUiState.isFinished,
             onClick = {
                 if (timerUiState.isRunning) {
                     onStopClick()
@@ -455,23 +465,12 @@ private fun GamePlayContent(
 
         // 타이머 리셋 버튼
         if (!timerUiState.isRunning && !timerUiState.isFinished) {
-            Button(
+            SmallTimerButton(
+                text = "다시 시작하기",
                 onClick = onResetClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.RefreshCw,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-
-                Spacer(modifier = Modifier.size(8.dp))
-
-                Text(text = "다시 시작하기")
-            }
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                isEnabled = !timerUiState.isFinished
+            )
         }
     }
 }
@@ -501,16 +500,17 @@ private fun GameResultContent(
                 text = "완료!",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.tertiary
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "기록: ${timerUiState.formattedTime}",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+        // 고정된 결과 표시를 위해 isFinished 파라미터 추가
+        TimerDisplay(
+            time = timerUiState.formattedTime,
+            isFinished = true,
+            isTimeout = timerUiState.isTimeout
         )
 
         // ms의 신 게임이면 끝자리 표시
