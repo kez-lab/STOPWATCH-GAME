@@ -30,21 +30,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.Shuffle
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.ui.components.GameCard
-import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
-import io.github.kez_lab.stopwatch_game.ui.navigation.Screen
+import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 
 /**
  * 게임 선택 화면
  */
 @Composable
-fun GameSelectionScreen() {
-    val navigationController = LocalNavigationController.current
+fun GameSelectionScreen(navController: NavHostController) {
     val appViewModel: AppViewModel = viewModel()
     
     // 게임 목록
@@ -67,7 +66,7 @@ fun GameSelectionScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 뒤로가기 버튼
-                IconButton(onClick = { navigationController.goBack() }) {
+                IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         imageVector = FeatherIcons.ArrowLeft,
                         contentDescription = "뒤로 가기"
@@ -119,7 +118,7 @@ fun GameSelectionScreen() {
                         onClick = {
                             val randomGame = games.random()
                             appViewModel.selectGame(randomGame.id)
-                            navigationController.navigateTo(Screen.GamePlay(randomGame.id))
+                            navController.navigate(Routes.gamePlay(randomGame.id))
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -152,7 +151,7 @@ fun GameSelectionScreen() {
                         game = game,
                         onClick = {
                             appViewModel.selectGame(game.id)
-                            navigationController.navigateTo(Screen.GamePlay(game.id))
+                            navController.navigate(Routes.gamePlay(game.id))
                         }
                     )
                 }

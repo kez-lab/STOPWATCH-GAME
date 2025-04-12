@@ -31,17 +31,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.PlayCircle
-import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
-import io.github.kez_lab.stopwatch_game.ui.navigation.Screen
+import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import kotlinx.coroutines.delay
 
 enum class HomeAnimationStage { NONE, TITLE, SUBTITLE, BUTTON }
 
 @Composable
-fun HomeScreen() {
-    val navigationController = LocalNavigationController.current
+fun HomeScreen(navController: NavHostController) {
     var stage by remember { mutableStateOf(HomeAnimationStage.NONE) }
 
     LaunchedEffect(Unit) {
@@ -69,7 +68,7 @@ fun HomeScreen() {
             Spacer(modifier = Modifier.height(80.dp))
             StartButton(
                 visible = stage >= HomeAnimationStage.BUTTON,
-                onClick = { navigationController.navigateTo(Screen.PlayerRegistration) }
+                onClick = { navController.navigate(Routes.PLAYER_REGISTRATION) }
             )
         }
     }

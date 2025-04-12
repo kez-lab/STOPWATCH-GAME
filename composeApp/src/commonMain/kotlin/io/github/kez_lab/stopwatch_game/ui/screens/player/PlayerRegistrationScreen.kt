@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowRight
 import compose.icons.feathericons.Plus
@@ -49,14 +51,12 @@ import compose.icons.feathericons.User
 import compose.icons.feathericons.UserPlus
 import compose.icons.feathericons.Users
 import io.github.kez_lab.stopwatch_game.model.Player
-import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
-import io.github.kez_lab.stopwatch_game.ui.navigation.Screen
+import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerRegistrationScreen() {
-    val navigationController = LocalNavigationController.current
+fun PlayerRegistrationScreen(navController: NavHostController) {
     val appViewModel: AppViewModel = viewModel()
 
     val players = remember { mutableStateListOf<Player>() }
@@ -81,11 +81,11 @@ fun PlayerRegistrationScreen() {
                 Button(
                     onClick = {
                         appViewModel.registerPlayers(players)
-                        navigationController.navigateToWithPopUpTo(
-                            screen = Screen.GameSelection,
-                            popUpTo = Screen.Home,
-                            inclusive = true
-                        )
+                        navController.navigate(Routes.GAME_SELECTION) {
+                            popUpTo(Routes.HOME) {
+                                inclusive = true
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
