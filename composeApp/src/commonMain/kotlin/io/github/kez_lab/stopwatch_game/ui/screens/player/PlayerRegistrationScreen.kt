@@ -71,13 +71,15 @@ fun PlayerRegistrationScreen() {
                 title = {
                     Text(
                         text = "플레이어 등록",
-                        fontSize = 24.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navigationController.goBack() }) {
+                    IconButton(
+                        onClick = { navigationController.goBack() }
+                    ) {
                         Icon(
                             imageVector = FeatherIcons.ArrowLeft,
                             contentDescription = "뒤로가기"
@@ -96,10 +98,26 @@ fun PlayerRegistrationScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
+                        .height(60.dp),
+                    shape = MaterialTheme.shapes.medium
                 ) {
-                    Text("다음으로 이동")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(imageVector = FeatherIcons.ArrowRight, contentDescription = null)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            "다음으로 이동",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            modifier = Modifier.size(18.dp),
+                            imageVector = FeatherIcons.ArrowRight,
+                            contentDescription = null
+                        )
+                    }
                 }
             }
         }
