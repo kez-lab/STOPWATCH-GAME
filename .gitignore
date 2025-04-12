@@ -46,6 +46,9 @@ Desktop.ini
 # Cursor
 .cursor/
 
+# Kotlin
+.kotlin/
+
 # Android
 /captures
 .externalNativeBuild
