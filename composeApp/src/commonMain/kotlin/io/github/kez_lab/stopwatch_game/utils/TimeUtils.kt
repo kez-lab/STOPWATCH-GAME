@@ -13,17 +13,29 @@ object TimeUtils {
      * @param showMillis 밀리초 표시 여부
      * @return "mm:ss.SSS" 또는 "mm:ss" 형식의 문자열
      */
-    fun formatTime(timeInMillis: Long, showMillis: Boolean = true): String {
-        val minutes = (timeInMillis / 60000).toInt()
-        val seconds = ((timeInMillis % 60000) / 1000).toInt()
-        val millis = (timeInMillis % 1000).toInt()
-        
+    fun formatTime(
+        timeInMillis: Long,
+        showMillis: Boolean = true
+    ): String {
+        val minutes = (timeInMillis / 60000)
+        val seconds = (timeInMillis % 60000) / 1000
+        val millis = (timeInMillis % 1000)
+
         return if (showMillis) {
-            String.format("%02d:%02d.%03d", minutes, seconds, millis)
+            "${padZero(minutes)}:${padZero(seconds)}.${padMillis(millis)}"
         } else {
-            String.format("%02d:%02d", minutes, seconds)
+            "${padZero(minutes)}:${padZero(seconds)}"
         }
     }
+
+    private fun padZero(value: Long): String = if (value < 10) "0$value" else "$value"
+
+    private fun padMillis(value: Long): String =
+        when {
+            value < 10 -> "00$value"
+            value < 100 -> "0$value"
+            else -> "$value"
+        }
     
     /**
      * 목표 시간과의 차이 계산
