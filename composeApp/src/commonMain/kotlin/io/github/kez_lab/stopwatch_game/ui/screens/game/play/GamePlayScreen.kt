@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.ArrowRight
@@ -51,8 +52,7 @@ import io.github.kez_lab.stopwatch_game.model.GameResult
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.ui.components.TimerButton
 import io.github.kez_lab.stopwatch_game.ui.components.TimerDisplay
-import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
-import io.github.kez_lab.stopwatch_game.ui.navigation.Screen
+import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.GameTimerViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.TimerUiState
@@ -72,8 +72,7 @@ enum class GameScreenState {
  * 게임 플레이 화면
  */
 @Composable
-fun GamePlayScreen(gameId: String) {
-    val navigationController = LocalNavigationController.current
+fun GamePlayScreen(navController: NavHostController, gameId: String) {
     val appViewModel: AppViewModel = viewModel()
     val timerViewModel: GameTimerViewModel = viewModel()
     val hapticFeedback = LocalHapticFeedback.current
@@ -94,13 +93,13 @@ fun GamePlayScreen(gameId: String) {
 
     // 게임 종료 처리 함수
     val finishGame = {
-        // 결과 계산 후 게임 선택 화면으로 이동 (이전 백스택 모두 제거)
+        // 결과 계산 후 결과 화면으로 이동 (게임 플레이 화면까지 제거)
         appViewModel.calculateRanks()
-        navigationController.navigateToWithPopUpTo(
-            screen = Screen.Result,
-            popUpTo = Screen.GamePlay(gameId),
-            inclusive = true
-        )
+        navController.navigate(Routes.Result) {
+            popUpTo(Routes.GamePlay(gameId)) {
+                inclusive = true
+            }
+        }
     }
 
     // 뒤로가기 처리 함수
@@ -112,7 +111,7 @@ fun GamePlayScreen(gameId: String) {
             }
             // 게임 인포 화면일 때는 바로 이전 화면으로
             screenState == GameScreenState.INFO -> {
-                navigationController.goBack()
+                navController.popBackStack()
             }
             // 결과 화면일 때는 다음 플레이어가 있으면 진행, 없으면 결과 화면으로
             screenState == GameScreenState.RESULT -> {
@@ -125,6 +124,8 @@ fun GamePlayScreen(gameId: String) {
                     finishGame()
                 }
             }
+
+            else -> Unit
         }
     }
 
@@ -274,7 +275,7 @@ fun GamePlayScreen(gameId: String) {
                     TextButton(
                         onClick = {
                             showBackConfirmation = false
-                            navigationController.goBack()
+                            navController.popBackStack()
                         }
                     ) {
                         Text("종료")

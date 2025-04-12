@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.Award
@@ -59,8 +60,7 @@ import compose.icons.feathericons.Play
 import compose.icons.feathericons.Target
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
-import io.github.kez_lab.stopwatch_game.ui.navigation.LocalNavigationController
-import io.github.kez_lab.stopwatch_game.ui.navigation.Screen
+import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 import kotlinx.coroutines.delay
 
@@ -68,8 +68,7 @@ import kotlinx.coroutines.delay
  * 결과 화면
  */
 @Composable
-fun ResultScreen() {
-    val navigationController = LocalNavigationController.current
+fun ResultScreen(navController: NavHostController) {
     val appViewModel: AppViewModel = viewModel()
 
     // 앱 상태
@@ -81,11 +80,11 @@ fun ResultScreen() {
 
     // 게임 선택으로 돌아가기
     val navigateToGameSelection = {
-        navigationController.navigateToWithPopUpTo(
-            screen = Screen.GameSelection,
-            popUpTo = Screen.Result,
-            inclusive = true
-        )
+        navController.navigate(Routes.GameSelection) {
+            popUpTo(Routes.Result) {
+                inclusive = true
+            }
+        }
     }
 
     // 벌칙 선택
@@ -118,9 +117,7 @@ fun ResultScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 뒤로가기 버튼 - 게임 선택 화면으로 이동
-                IconButton(onClick = {
-                    navigationController.goBack()
-                }) {
+                IconButton(onClick = navigateToGameSelection) {
                     Icon(
                         imageVector = FeatherIcons.ArrowLeft,
                         contentDescription = "게임 선택으로"
@@ -138,11 +135,11 @@ fun ResultScreen() {
                 // 홈으로 버튼
                 IconButton(
                     onClick = {
-                        navigationController.navigateToWithPopUpTo(
-                            screen = Screen.Home,
-                            popUpTo = Screen.Home,
-                            inclusive = true
-                        )
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Home) {
+                                inclusive = false
+                            }
+                        }
                     }
                 ) {
                     Icon(
@@ -233,11 +230,11 @@ fun ResultScreen() {
                     onClick = {
                         uiState.selectedGame?.let { game ->
                             appViewModel.prepareNewGame()
-                            navigationController.navigateToWithPopUpTo(
-                                screen = Screen.GamePlay(game.id),
-                                popUpTo = Screen.GameSelection,
-                                inclusive = true
-                            )
+                            navController.navigate(Routes.GamePlay(game.id)) {
+                                popUpTo(Routes.GameSelection) {
+                                    inclusive = true
+                                }
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
