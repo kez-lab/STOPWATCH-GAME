@@ -54,7 +54,6 @@ import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.Award
 import compose.icons.feathericons.Clock
-import compose.icons.feathericons.Home
 import compose.icons.feathericons.Play
 import compose.icons.feathericons.Target
 import io.github.kez_lab.stopwatch_game.model.GameType
@@ -91,6 +90,7 @@ fun ResultScreen(navController: NavHostController) {
         delay(3000) // 축하 화면 잠시 보여주기
         appViewModel.selectRandomPunishment()
         showCongrats = false
+        delay(500)
         showPunishment = true
     }
 
@@ -130,23 +130,6 @@ fun ResultScreen(navController: NavHostController) {
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
-
-                // 홈으로 버튼
-                IconButton(
-                    onClick = {
-                        navController.navigate(Routes.Home) {
-                            popUpTo(Routes.Home) {
-                                inclusive = false
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = FeatherIcons.Home,
-                        contentDescription = "홈으로",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -212,7 +195,6 @@ fun ResultScreen(navController: NavHostController) {
                         isWinner = result.isWinner,
                         specialValue = result.specialValue,
                         gameType = selectedGame?.gameType ?: GameType.EXACT_STOP,
-                        targetTime = result.targetTime
                     )
                 }
             }
@@ -228,9 +210,9 @@ fun ResultScreen(navController: NavHostController) {
                 Button(
                     onClick = {
                         uiState.selectedGame?.let { game ->
-                            appViewModel.prepareNewGame()
+                            appViewModel.selectGame(game.id)
                             navController.navigate(Routes.GamePlay(game.id)) {
-                                popUpTo(Routes.GameSelection) {
+                                popUpTo(Routes.Result) {
                                     inclusive = true
                                 }
                             }
@@ -409,7 +391,6 @@ private fun ResultItem(
     isWinner: Boolean,
     specialValue: Int = -1,
     gameType: GameType,
-    targetTime: Long = 0
 ) {
     Card(
         modifier = Modifier

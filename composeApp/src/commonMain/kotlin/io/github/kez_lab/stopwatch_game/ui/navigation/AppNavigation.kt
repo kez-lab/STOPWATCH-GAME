@@ -14,21 +14,21 @@ import kotlinx.serialization.Serializable
 
 // 앱 내 라우트 정의
 @Serializable
-sealed class Routes(val route: String) {
+sealed class Routes {
     @Serializable
-    data object Home : Routes("home")
+    data object Home : Routes()
 
     @Serializable
-    data object PlayerRegistration : Routes("player_registration")
+    data object PlayerRegistration : Routes()
 
     @Serializable
-    data object GameSelection : Routes("game_selection")
+    data object GameSelection : Routes()
 
     @Serializable
-    data class GamePlay(val gameId: String) : Routes("game_play")
+    data class GamePlay(val gameId: String) : Routes()
 
     @Serializable
-    data object Result : Routes("result")
+    data object Result : Routes()
 }
 
 /**

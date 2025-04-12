@@ -38,6 +38,7 @@ class AppViewModel : ViewModel() {
     
     // 게임 선택
     fun selectGame(gameId: String) {
+        prepareNewGame()
         val game = GameRepository.getGameById(gameId)
         game?.let {
             _uiState.update { currentState ->
@@ -182,7 +183,7 @@ class AppViewModel : ViewModel() {
     }
     
     // 새 게임 시작 준비
-    fun prepareNewGame() {
+    private fun prepareNewGame() {
         _uiState.update { currentState ->
             currentState.copy(
                 currentGameResults = emptyList(),
@@ -190,6 +191,52 @@ class AppViewModel : ViewModel() {
                 selectedGame = null,
                 selectedPunishment = null,
                 currentPlayerIndex = 0
+            )
+        }
+    }
+    
+    // 현재 플레이어의 마지막 게임 결과 제거
+    fun removeLastPlayerResult() {
+        val currentPlayerIndex = _uiState.value.currentPlayerIndex
+        val updatedPlayers = _uiState.value.players.toMutableList()
+        
+        // 현재 플레이어의 마지막 결과 제거
+        if (currentPlayerIndex < updatedPlayers.size) {
+            val currentPlayer = updatedPlayers[currentPlayerIndex]
+            if (currentPlayer.gameResults.isNotEmpty()) {
+                // 마지막 결과 복사본 만들기
+                val updatedResults = currentPlayer.gameResults.toMutableList()
+                // 마지막 결과 제거
+                updatedResults.removeAt(updatedResults.size - 1)
+                
+                // 현재 플레이어 업데이트
+                updatedPlayers[currentPlayerIndex] = currentPlayer.copy(
+                    gameResults = updatedResults
+                )
+            }
+        }
+        
+        // 현재 게임 결과 목록에서도 해당 결과 제거
+        val updatedGameResults = _uiState.value.currentGameResults.toMutableList()
+        if (updatedGameResults.isNotEmpty()) {
+            // 마지막에 추가된 현재 플레이어의 결과를 제거
+            // 여러 플레이어가 있을 경우 현재 플레이어의 결과만 제거
+            val playerResults = updatedGameResults.filter { (player, _) -> 
+                updatedPlayers.indexOf(player) == currentPlayerIndex 
+            }
+            
+            if (playerResults.isNotEmpty()) {
+                // 현재 플레이어의 마지막 결과 제거
+                updatedGameResults.remove(playerResults.last())
+            }
+        }
+        
+        _uiState.update { currentState ->
+            currentState.copy(
+                players = updatedPlayers,
+                currentGameResults = updatedGameResults,
+                // 랭킹 결과도 초기화
+                rankedResults = emptyList()
             )
         }
     }
