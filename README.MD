@@ -1,6 +1,8 @@
 # TimeBattle - 스톱워치 미니게임
 
-![TimeBattle](screenshots/splash.png)
+<p align="center">
+  <img src="screenshots/splash.png" alt="TimeBattle" width="600"/>
+</p>
 
 ## 프로젝트 소개
 TimeBattle은 친구들과 함께 즐길 수 있는 스톱워치 기반 미니게임 컬렉션입니다. 다양한 스톱워치 게임들을 통해 친구들과 재미있게 경쟁할 수 있습니다. Compose Multiplatform을 활용하여 Android와 iOS 플랫폼 모두에서 동일한 사용자 경험을 제공합니다.
