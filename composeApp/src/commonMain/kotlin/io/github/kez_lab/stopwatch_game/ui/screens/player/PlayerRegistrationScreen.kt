@@ -1,7 +1,6 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.player
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,7 +79,7 @@ fun PlayerRegistrationScreen(navController: NavHostController) {
                     onClick = {
                         appViewModel.registerPlayers(players)
                         navController.navigate(Routes.GameSelection) {
-                            popUpTo(Routes.Home) {
+                            popUpTo(Routes.Splash) {
                                 inclusive = true
                             }
                         }

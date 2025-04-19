@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class Routes {
     @Serializable
-    data object Home : Routes()
+    data object Splash : Routes()
 
     @Serializable
     data object PlayerRegistration : Routes()
@@ -46,7 +46,7 @@ fun AppNavigation() {
     NavHost(
         modifier = Modifier.safeDrawingPadding(),
         navController = navController,
-        startDestination = Routes.Home::class,
+        startDestination = Routes.Splash::class,
         enterTransition = {
             fadeIn(animationSpec = tween(durationMillis = 150))
         },
@@ -60,7 +60,7 @@ fun AppNavigation() {
             fadeOut(animationSpec = tween(durationMillis = 150))
         }
     ) {
-        composable<Routes.Home> {
+        composable<Routes.Splash> {
             SplashScreen(navController = navController)
         }
         composable<Routes.PlayerRegistration> {

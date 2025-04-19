@@ -59,11 +59,11 @@ import compose.icons.feathericons.Users
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import kotlinx.coroutines.delay
 
-enum class HomeAnimationStage { NONE, TITLE, SUBTITLE, BUTTON }
+enum class SplashAnimationStage { NONE, TITLE, SUBTITLE, BUTTON }
 
 @Composable
 fun SplashScreen(navController: NavHostController) {
-    var stage by remember { mutableStateOf(HomeAnimationStage.NONE) }
+    var stage by remember { mutableStateOf(SplashAnimationStage.NONE) }
 
     // 배경 애니메이션 효과
     val density = LocalDensity.current
@@ -77,7 +77,7 @@ fun SplashScreen(navController: NavHostController) {
     )
 
     val pulseAnimation by animateFloatAsState(
-        targetValue = if (stage == HomeAnimationStage.BUTTON) 1.1f else 1.0f,
+        targetValue = if (stage == SplashAnimationStage.BUTTON) 1.1f else 1.0f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -86,11 +86,11 @@ fun SplashScreen(navController: NavHostController) {
     )
 
     LaunchedEffect(Unit) {
-        stage = HomeAnimationStage.TITLE
+        stage = SplashAnimationStage.TITLE
         delay(600)
-        stage = HomeAnimationStage.SUBTITLE
+        stage = SplashAnimationStage.SUBTITLE
         delay(600)
-        stage = HomeAnimationStage.BUTTON
+        stage = SplashAnimationStage.BUTTON
     }
     val colorScheme = MaterialTheme.colorScheme
     Box(
@@ -158,14 +158,14 @@ fun SplashScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Center
         ) {
             // 타이틀 및 서브타이틀
-            HomeTitle(visible = stage >= HomeAnimationStage.TITLE)
+            HomeTitle(visible = stage >= SplashAnimationStage.TITLE)
             Spacer(modifier = Modifier.height(16.dp))
-            HomeSubtitle(visible = stage >= HomeAnimationStage.SUBTITLE)
+            HomeSubtitle(visible = stage >= SplashAnimationStage.SUBTITLE)
             Spacer(modifier = Modifier.height(80.dp))
 
             // 게임 버튼 섹션
             AnimatedVisibility(
-                visible = stage >= HomeAnimationStage.BUTTON,
+                visible = stage >= SplashAnimationStage.BUTTON,
                 enter = fadeIn(animationSpec = tween(1000)) +
                         expandVertically(animationSpec = tween(800)),
                 modifier = Modifier.fillMaxWidth()
@@ -266,7 +266,7 @@ fun SplashScreen(navController: NavHostController) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 24.dp)
-                .alpha(if (stage >= HomeAnimationStage.BUTTON) 0.7f else 0f)
+                .alpha(if (stage >= SplashAnimationStage.BUTTON) 0.7f else 0f)
         ) {
             Text(
                 text = "KEZ LAB",
