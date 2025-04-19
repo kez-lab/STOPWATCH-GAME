@@ -134,7 +134,7 @@ class GameTimerViewModel : ViewModel() {
             val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
             val finalElapsedTimeMillis = currentTimeMillis - startTimeMillis
             
-            // ms의 신 게임에서 끝자리 숫자 계산
+            // ms를 높여라 게임에서 끝자리 숫자 계산
             val lastDigit = if (_uiState.value.gameType == GameType.MS_DIGIT) {
                 TimeUtils.getLastDigit(finalElapsedTimeMillis)
             } else -1

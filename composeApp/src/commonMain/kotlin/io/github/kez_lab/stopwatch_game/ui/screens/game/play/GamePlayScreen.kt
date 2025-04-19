@@ -716,7 +716,7 @@ private fun GameResultContent(
             )
         }
 
-        // ms의 신 게임이면 끝자리 표시
+        // ms를 높여라 게임이면 끝자리 표시
         if (gameType == GameType.MS_DIGIT && timerUiState.lastDigit >= 0) {
             Spacer(modifier = Modifier.height(24.dp))
 
