@@ -31,8 +31,11 @@ class GameTimerViewModel : ViewModel() {
     // 타이머 시작 시간 (밀리초 단위로 저장)
     private var startTimeMillis: Long = 0
     
-    // UI 업데이트 간격 (33ms = 약 30FPS, 배터리 소모 줄임)
-    private val UI_UPDATE_INTERVAL = 33L
+    // UI 업데이트 간격 (16ms = 약 60FPS)
+    private val UI_UPDATE_INTERVAL = 16L
+    
+    // 높은 정밀도가 필요한 게임을 위한 UI 업데이트 간격 (8ms = 약 120FPS)
+    private val UI_UPDATE_INTERVAL_PRECISE = 8L
     
     // 목표 시간 설정
     fun setTargetTime(targetTimeMillis: Long) {
@@ -79,6 +82,13 @@ class GameTimerViewModel : ViewModel() {
         
         timerJob = viewModelScope.launch {
             try {
+                // 게임 타입에 따라 적절한 업데이트 간격 선택
+                val updateInterval = if (_uiState.value.gameType == GameType.MS_DIGIT) {
+                    UI_UPDATE_INTERVAL_PRECISE
+                } else {
+                    UI_UPDATE_INTERVAL
+                }
+                
                 while (isActive) {
                     // 현재 시간에서 시작 시간을 빼서 정확한 경과 시간 계산 (밀리초 단위)
                     val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
@@ -105,7 +115,7 @@ class GameTimerViewModel : ViewModel() {
                     }
                     
                     // UI 업데이트 간격만큼 대기
-                    delay(UI_UPDATE_INTERVAL)
+                    delay(updateInterval)
                 }
             } catch (e: Exception) {
                 // 예외 처리
@@ -124,7 +134,7 @@ class GameTimerViewModel : ViewModel() {
             val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
             val finalElapsedTimeMillis = currentTimeMillis - startTimeMillis
             
-            // ms의 신 게임에서 끝자리 숫자 계산
+            // ms를 높여라 게임에서 끝자리 숫자 계산
             val lastDigit = if (_uiState.value.gameType == GameType.MS_DIGIT) {
                 TimeUtils.getLastDigit(finalElapsedTimeMillis)
             } else -1

@@ -58,6 +58,7 @@ import compose.icons.feathericons.Play
 import compose.icons.feathericons.Target
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
+import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 import kotlinx.coroutines.delay
@@ -110,27 +111,11 @@ fun ResultScreen(navController: NavHostController) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 헤더
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 뒤로가기 버튼 - 게임 선택 화면으로 이동
-                IconButton(onClick = navigateToGameSelection) {
-                    Icon(
-                        imageVector = FeatherIcons.ArrowLeft,
-                        contentDescription = "게임 선택으로"
-                    )
-                }
-
-                Text(
-                    text = "게임 결과",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
-            }
+            // 공통 AppBar 사용
+            AppBar(
+                title = "게임 결과",
+                onBackClick = navigateToGameSelection
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

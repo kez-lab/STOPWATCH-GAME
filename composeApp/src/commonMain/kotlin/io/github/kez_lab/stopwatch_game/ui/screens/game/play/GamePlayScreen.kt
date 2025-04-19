@@ -23,7 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,18 +55,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.AlertCircle
-import compose.icons.feathericons.ArrowLeft
-import compose.icons.feathericons.ArrowRight
 import compose.icons.feathericons.Clock
 import compose.icons.feathericons.PlayCircle
+import compose.icons.feathericons.SkipForward
 import compose.icons.feathericons.Target
-import compose.icons.feathericons.User
 import compose.icons.feathericons.Users
 import compose.icons.feathericons.ZapOff
 import io.github.kez_lab.stopwatch_game.model.Game
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
 import io.github.kez_lab.stopwatch_game.model.GameType
+import io.github.kez_lab.stopwatch_game.ui.components.AppBar
+import io.github.kez_lab.stopwatch_game.ui.components.AppBarActionItem
 import io.github.kez_lab.stopwatch_game.ui.components.TimerButton
 import io.github.kez_lab.stopwatch_game.ui.components.TimerDisplay
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
@@ -123,6 +122,20 @@ fun GamePlayScreen(
         }
     }
 
+    // 다음 플레이어로 이동하는 통합 함수
+    val moveToNextPlayer = {
+        val hasNextPlayer = appViewModel.moveToNextPlayer()
+        if (hasNextPlayer) {
+            timerViewModel.resetTimer()
+            screenState = GameScreenState.INFO
+            countdown = 3
+            true
+        } else {
+            finishGame()
+            false
+        }
+    }
+
     // 뒤로가기 처리 함수
     val handleBackPress = {
         when {
@@ -136,14 +149,7 @@ fun GamePlayScreen(
             }
             // 결과 화면일 때는 다음 플레이어가 있으면 진행, 없으면 결과 화면으로
             screenState == GameScreenState.RESULT -> {
-                val hasNextPlayer = appViewModel.moveToNextPlayer()
-                if (hasNextPlayer) {
-                    timerViewModel.resetTimer()
-                    screenState = GameScreenState.INFO
-                    countdown = 3
-                } else {
-                    finishGame()
-                }
+                moveToNextPlayer()
             }
 
             else -> Unit
@@ -219,11 +225,21 @@ fun GamePlayScreen(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 헤더
-            GameHeader(
-                game = game,
+            // 헤더 - 공통 AppBar 사용으로 변경
+            AppBar(
+                title = game?.name ?: "",
+                onBackClick = { handleBackPress() },
                 currentPlayer = appUiState.currentPlayer,
-                onBackClick = { handleBackPress() }
+                showPlayerInfo = true,
+                actions = {
+                    // 패스 버튼
+                    AppBarActionItem(
+                        icon = FeatherIcons.SkipForward,
+                        contentDescription = "패스",
+                        onClick = { /* TODO: 패스 기능 구현 */ },
+                        enabled = false // 현재 비활성화 상태
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -240,7 +256,14 @@ fun GamePlayScreen(
                 }
 
                 GameScreenState.COUNTDOWN -> {
-                    CountdownDisplay(countdown = countdown)
+                    CountdownDisplay(
+                        countdown = countdown,
+                        onCancel = {
+                            // 카운트다운 취소하고 정보 화면으로 돌아가기
+                            screenState = GameScreenState.INFO
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                    )
                 }
 
                 GameScreenState.PLAYING -> {
@@ -255,16 +278,7 @@ fun GamePlayScreen(
                     GameResultContent(
                         timerUiState = timerUiState,
                         gameType = game?.gameType ?: GameType.EXACT_STOP,
-                        onNextButtonClicked = {
-                            val hasNextPlayer = appViewModel.moveToNextPlayer()
-                            if (hasNextPlayer) {
-                                countdown = 3
-                                timerViewModel.resetTimer()
-                                screenState = GameScreenState.COUNTDOWN
-                            } else {
-                                finishGame()
-                            }
-                        }
+                        onNextButtonClicked = { moveToNextPlayer() }
                     )
                 }
             }
@@ -294,92 +308,6 @@ fun GamePlayScreen(
                     }
                 }
             )
-        }
-    }
-}
-
-/**
- * 게임 헤더 컴포넌트
- */
-@Composable
-private fun GameHeader(
-    game: io.github.kez_lab.stopwatch_game.model.Game?,
-    currentPlayer: io.github.kez_lab.stopwatch_game.model.Player?,
-    onBackClick: () -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // 헤더 상단 (게임 제목 및 네비게이션)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 뒤로가기 버튼
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = FeatherIcons.ArrowLeft,
-                    contentDescription = "뒤로 가기"
-                )
-            }
-
-            // 게임 제목
-            game?.let {
-                Text(
-                    text = it.name,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // 패스 버튼 (나중에 구현)
-            IconButton(
-                onClick = { /* TODO */ },
-                enabled = false
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.ArrowRight,
-                    contentDescription = "패스",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 현재 플레이어 표시
-        currentPlayer?.let { player ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = FeatherIcons.User,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    Spacer(modifier = Modifier.size(12.dp))
-
-                    Text(
-                        text = player.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
         }
     }
 }
@@ -540,7 +468,10 @@ private fun GameInfoCard(
  * 게임 카운트다운 화면
  */
 @Composable
-private fun CountdownDisplay(countdown: Int) {
+private fun CountdownDisplay(
+    countdown: Int,
+    onCancel: () -> Unit
+) {
     // 게임 느낌의 애니메이션 효과
     val animationProgress = remember { Animatable(0f) }
     val countdownColor = MaterialTheme.colorScheme.primary
@@ -599,9 +530,6 @@ private fun CountdownDisplay(countdown: Int) {
                 modifier = Modifier
                     .scale(scale)
                     .alpha(alpha)
-                    .graphicsLayer {
-                        shadowElevation = 20f * animationProgress.value
-                    }
                     .drawBehind {
                         drawCircle(
                             brush = Brush.radialGradient(
@@ -615,6 +543,27 @@ private fun CountdownDisplay(countdown: Int) {
                         )
                     }
             )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // 취소 버튼 추가
+            Button(
+                onClick = onCancel,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ),
+                modifier = Modifier
+                    .alpha(alpha)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = "준비 취소",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -738,16 +687,6 @@ private fun GameResultContent(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
-                        .graphicsLayer {
-                            shadowElevation = 12f
-                        }
-                        .drawBehind {
-                            // 게임스러운 배경 효과
-                            drawCircle(
-                                color = colorScheme.error.copy(alpha = 0.2f),
-                                radius = size.minDimension * 0.8f
-                            )
-                        }
                 )
             } else {
                 Text(
@@ -756,16 +695,6 @@ private fun GameResultContent(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier
-                        .graphicsLayer {
-                            shadowElevation = 12f
-                        }
-                        .drawBehind {
-                            // 게임스러운 배경 효과
-                            drawCircle(
-                                color = colorScheme.tertiary.copy(alpha = 0.2f),
-                                radius = size.minDimension * 0.8f
-                            )
-                        }
                 )
             }
         }
@@ -787,7 +716,7 @@ private fun GameResultContent(
             )
         }
 
-        // ms의 신 게임이면 끝자리 표시
+        // ms를 높여라 게임이면 끝자리 표시
         if (gameType == GameType.MS_DIGIT && timerUiState.lastDigit >= 0) {
             Spacer(modifier = Modifier.height(24.dp))
 

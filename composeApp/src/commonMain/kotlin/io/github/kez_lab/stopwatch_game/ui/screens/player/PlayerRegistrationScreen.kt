@@ -1,5 +1,8 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.player
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +17,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,9 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -49,6 +52,8 @@ import compose.icons.feathericons.User
 import compose.icons.feathericons.UserPlus
 import compose.icons.feathericons.Users
 import io.github.kez_lab.stopwatch_game.model.Player
+import io.github.kez_lab.stopwatch_game.ui.components.AppBar
+import io.github.kez_lab.stopwatch_game.ui.components.NavigationType
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 
@@ -63,15 +68,10 @@ fun PlayerRegistrationScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "플레이어 등록",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
+            AppBar(
+                title = "플레이어 등록",
+                onBackClick = { navController.navigateUp() },
+                navigationType = NavigationType.BACK
             )
         },
         bottomBar = {
@@ -234,9 +234,10 @@ private fun PlayerItem(player: Player, onRemove: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .border(BorderStroke(2.dp, Color.Black), shape = RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -248,24 +249,26 @@ private fun PlayerItem(player: Player, onRemove: () -> Unit) {
             Icon(
                 imageVector = FeatherIcons.User,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
             Text(
                 text = player.name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
-
+            
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = FeatherIcons.Trash2,
                     contentDescription = "삭제",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -273,11 +276,11 @@ private fun PlayerItem(player: Player, onRemove: () -> Unit) {
 }
 
 @Composable
-private fun ColumnScope.EmptyPlayerHint() {
+private fun EmptyPlayerHint() {
     Box(
         modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(200.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -287,12 +290,14 @@ private fun ColumnScope.EmptyPlayerHint() {
             Icon(
                 imageVector = FeatherIcons.Users,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
             Text(
-                text = "아직 등록된 플레이어가 없습니다",
+                text = "플레이어를 추가해 주세요",
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )

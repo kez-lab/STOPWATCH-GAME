@@ -3,15 +3,11 @@ package io.github.kez_lab.stopwatch_game.ui.screens.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
@@ -50,7 +45,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,7 +62,7 @@ import kotlinx.coroutines.delay
 enum class HomeAnimationStage { NONE, TITLE, SUBTITLE, BUTTON }
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun SplashScreen(navController: NavHostController) {
     var stage by remember { mutableStateOf(HomeAnimationStage.NONE) }
 
     // 배경 애니메이션 효과
@@ -163,9 +157,10 @@ fun HomeScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Title(visible = stage >= HomeAnimationStage.TITLE)
+            // 타이틀 및 서브타이틀
+            HomeTitle(visible = stage >= HomeAnimationStage.TITLE)
             Spacer(modifier = Modifier.height(16.dp))
-            Subtitle(visible = stage >= HomeAnimationStage.SUBTITLE)
+            HomeSubtitle(visible = stage >= HomeAnimationStage.SUBTITLE)
             Spacer(modifier = Modifier.height(80.dp))
 
             // 게임 버튼 섹션
@@ -283,74 +278,61 @@ fun HomeScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun Title(visible: Boolean) {
-    val transition = updateTransition(targetState = visible, label = "TitleTransition")
-    val alpha by transition.animateFloat({ tween(600) }, label = "alpha") { if (it) 1f else 0f }
-    val offsetY by transition.animateDp(
-        { tween(700) },
-        label = "offsetY"
-    ) { if (it) 0.dp else 50.dp }
-
-    // 타이틀 텍스트에 그래디언트 효과
-    val titleBrush = Brush.linearGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.secondary
-        )
-    )
-
-    Box(
-        modifier = Modifier
-            .alpha(alpha)
-            .offset(y = offsetY)
+private fun HomeTitle(visible: Boolean) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(1000)) +
+                expandVertically(animationSpec = tween(800)),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        val colorScheme = MaterialTheme.colorScheme
-        Text(
-            text = "TimeBattle",
-            fontSize = 60.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .graphicsLayer {
-                    // 3D 효과
-                    rotationX = 10f
-                    shadowElevation = 15f
-                }
-                .drawBehind {
-                    // 텍스트 뒤 그림자 효과
-                    drawRoundRect(
-                        color = colorScheme.primary.copy(alpha = 0.15f),
-                        topLeft = Offset(10f, 10f),
-                        size = size.copy(width = size.width - 20f, height = size.height - 20f),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
-                    )
-                }
-                .padding(16.dp),
-            style = MaterialTheme.typography.headlineLarge.copy(
-                brush = titleBrush,
-                fontWeight = FontWeight.ExtraBold
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 타이틀 텍스트
+            Text(
+                text = "TimeBattle",
+                fontSize = 48.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                letterSpacing = 2.sp,
+                modifier = Modifier
             )
-        )
+        }
     }
 }
 
 @Composable
-private fun Subtitle(visible: Boolean) {
-    val transition = updateTransition(targetState = visible, label = "SubtitleTransition")
-    val alpha by transition.animateFloat({ tween(600) }, label = "alpha") { if (it) 1f else 0f }
-
-    Box(
-        modifier = Modifier
-            .alpha(alpha)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .padding(vertical = 8.dp, horizontal = 16.dp)
+private fun HomeSubtitle(visible: Boolean) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(1000)) +
+                expandVertically(animationSpec = tween(800)),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "친구들과 함께하는 스톱워치 미니게임",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 서브타이틀 텍스트
+            Text(
+                text = "스톱워치 미니게임",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 설명 텍스트
+            Text(
+                text = "다양한 스톱워치 게임으로\n친구들과 함께 즐거운 시간을 보내세요!",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+        }
     }
 }

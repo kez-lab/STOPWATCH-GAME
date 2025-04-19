@@ -20,7 +20,7 @@ enum class GameType {
     SLOWEST_STOP, // 가장 느리게 멈춰라 (제한 시간 내에서)
     RANDOM_MATCH, // 랜덤 타임 맞히기
     LAST_PERSON, // 눈치 싸움 (가장 늦게 멈추기)
-    MS_DIGIT // ms의 신 (끝자리 배틀)
+    MS_DIGIT // ms를 높여라 (끝자리 배틀)
 }
 
 /**
@@ -60,7 +60,7 @@ object GameRepository {
         ),
         Game(
             id = "ms_digit",
-            name = "ms의 신",
+            name = "ms를 높여라",
             description = "원하는 시간에 스톱워치를 멈추고, 밀리초 끝자리 숫자만 비교합니다. 가장 큰 숫자가 승리!",
             iconName = "ic_casino",
             gameType = GameType.MS_DIGIT,

@@ -17,6 +17,25 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /**
+ * 게임별 제한 시간 상수 (밀리초 단위)
+ */
+object GameTimeConstants {
+    const val EXACT_STOP_TARGET = 5000L       // 정확히 멈춰 타겟 시간 (5초)
+    const val SLOWEST_STOP_LIMIT = 10000L     // 가장 느리게 멈춰라 제한 시간 (10초)
+    const val LAST_PERSON_LIMIT = 15000L      // 눈치 싸움 제한 시간 (15초)
+    
+    // 게임 타입에 따른 제한/타겟 시간 가져오기
+    fun getTimeLimit(gameType: GameType): Long {
+        return when (gameType) {
+            GameType.EXACT_STOP -> EXACT_STOP_TARGET
+            GameType.SLOWEST_STOP -> SLOWEST_STOP_LIMIT
+            GameType.LAST_PERSON -> LAST_PERSON_LIMIT
+            else -> 0L // 다른 게임 타입은 제한 시간 없음
+        }
+    }
+}
+
+/**
  * 앱 전체 상태 뷰모델
  */
 class AppViewModel : ViewModel() {
@@ -102,7 +121,7 @@ class AppViewModel : ViewModel() {
                 }
                 GameType.SLOWEST_STOP -> {
                     // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
-                    val limitTime = 10000L // 10초
+                    val limitTime = GameTimeConstants.SLOWEST_STOP_LIMIT
                     currentResults.filter { (_, result) -> 
                         result.timeTaken <= limitTime 
                     }.sortedByDescending { (_, result) -> 
@@ -117,7 +136,7 @@ class AppViewModel : ViewModel() {
                 }
                 GameType.LAST_PERSON -> {
                     // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
-                    val limitTime = 15000L // 15초
+                    val limitTime = GameTimeConstants.LAST_PERSON_LIMIT
                     currentResults.filter { (_, result) -> 
                         result.timeTaken <= limitTime 
                     }.sortedByDescending { (_, result) -> 
