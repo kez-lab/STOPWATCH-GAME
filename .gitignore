@@ -80,3 +80,5 @@ out/
 
 # Node.js
 *yarn.lock
+
+keystore
