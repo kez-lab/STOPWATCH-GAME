@@ -1,7 +1,7 @@
 # TimeBattle - 스톱워치 미니게임
 
 <p align="center">
-  <img src="composeApp/src/androidMain/res/mipmap-xxxhdpi/time_battle_icon.png" alt="TimeBattle" width="400"/>
+  <img src="composeApp/src/androidMain/res/mipmap-xxxhdpi/ic_time_battle.png" alt="TimeBattle" width="400"/>
 </p>
 
 ## 프로젝트 소개
