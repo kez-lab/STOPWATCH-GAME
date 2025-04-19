@@ -91,7 +91,6 @@ fun TimerDisplay(
             .fillMaxWidth()
             .padding(vertical = 16.dp)
     ) {
-        val fontSize = if (maxWidth < 400.dp) 52.sp else 68.sp
 
         Surface(
             modifier = Modifier
@@ -163,7 +162,7 @@ fun TimerDisplay(
             ) {
                 Text(
                     text = displayedTime,
-                    fontSize = fontSize,
+                    fontSize = 40.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,
                     color = timerColor,

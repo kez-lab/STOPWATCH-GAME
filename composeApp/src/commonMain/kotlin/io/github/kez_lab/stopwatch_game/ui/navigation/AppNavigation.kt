@@ -3,14 +3,16 @@ package io.github.kez_lab.stopwatch_game.ui.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import io.github.kez_lab.stopwatch_game.ui.screens.game.GameSelectionScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.game.play.GamePlayScreen
-import io.github.kez_lab.stopwatch_game.ui.screens.home.HomeScreen
+import io.github.kez_lab.stopwatch_game.ui.screens.home.SplashScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.player.PlayerRegistrationScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.result.ResultScreen
 import kotlinx.serialization.Serializable
@@ -42,6 +44,7 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
+        modifier = Modifier.safeDrawingPadding(),
         navController = navController,
         startDestination = Routes.Home::class,
         enterTransition = {
@@ -58,7 +61,7 @@ fun AppNavigation() {
         }
     ) {
         composable<Routes.Home> {
-            HomeScreen(navController = navController)
+            SplashScreen(navController = navController)
         }
         composable<Routes.PlayerRegistration> {
             PlayerRegistrationScreen(navController = navController)
