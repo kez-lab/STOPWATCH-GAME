@@ -4,6 +4,8 @@
   <img src="composeApp/src/androidMain/res/mipmap-xxxhdpi/ic_time_battle.png" alt="TimeBattle" width="400"/>
 </p>
 
+> 🎉 **TimeBattle이 정식 출시되었습니다! [지금 다운로드](https://play.google.com/store/apps/details?id=io.github.kez_lab.stopwatch_game.androidApp)** 🎮
+
 ## 프로젝트 소개
 TimeBattle은 친구들과 함께 즐길 수 있는 스톱워치 기반 미니게임 컬렉션입니다. 다양한 스톱워치 게임들을 통해 친구들과 재미있게 경쟁할 수 있습니다. Compose Multiplatform을 활용하여 Android와 iOS 플랫폼 모두에서 동일한 사용자 경험을 제공합니다.
 
