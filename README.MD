@@ -1,5 +1,12 @@
 # TimeBattle - 스톱워치 미니게임
 
+## 데모 영상
+<video width="600" controls>
+  <source src="./assets/demo.mp4" type="video/mp4">
+  지원하지 않는 브라우저입니다.
+</video>
+
+## 앱 아이콘
 <p align="center">
   <img src="composeApp/src/androidMain/res/mipmap-xxxhdpi/ic_time_battle.png" alt="TimeBattle" width="400"/>
 </p>
