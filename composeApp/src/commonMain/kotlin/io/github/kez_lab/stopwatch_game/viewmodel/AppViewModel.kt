@@ -20,19 +20,8 @@ import kotlin.math.abs
  * 게임별 제한 시간 상수 (밀리초 단위)
  */
 object GameTimeConstants {
-    const val EXACT_STOP_TARGET = 5000L       // 정확히 멈춰 타겟 시간 (5초)
     const val SLOWEST_STOP_LIMIT = 10000L     // 가장 느리게 멈춰라 제한 시간 (10초)
     const val LAST_PERSON_LIMIT = 15000L      // 눈치 싸움 제한 시간 (15초)
-    
-    // 게임 타입에 따른 제한/타겟 시간 가져오기
-    fun getTimeLimit(gameType: GameType): Long {
-        return when (gameType) {
-            GameType.EXACT_STOP -> EXACT_STOP_TARGET
-            GameType.SLOWEST_STOP -> SLOWEST_STOP_LIMIT
-            GameType.LAST_PERSON -> LAST_PERSON_LIMIT
-            else -> 0L // 다른 게임 타입은 제한 시간 없음
-        }
-    }
 }
 
 /**
@@ -41,10 +30,10 @@ object GameTimeConstants {
 class AppViewModel : ViewModel() {
     // 내부 상태
     private val _uiState = MutableStateFlow(AppUiState())
-    
+
     // 외부에 노출되는 상태
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
-    
+
     // 플레이어 등록
     fun registerPlayers(players: List<Player>) {
         _uiState.update { currentState ->
@@ -54,7 +43,7 @@ class AppViewModel : ViewModel() {
             )
         }
     }
-    
+
     // 게임 선택
     fun selectGame(gameId: String) {
         prepareNewGame()
@@ -67,16 +56,16 @@ class AppViewModel : ViewModel() {
             }
         }
     }
-    
+
     // 다음 플레이어로 이동
     fun moveToNextPlayer(): Boolean {
         val currentIndex = _uiState.value.currentPlayerIndex
         val totalPlayers = _uiState.value.players.size
-        
+
         if (currentIndex >= totalPlayers - 1) {
             return false // 모든 플레이어가 플레이 완료
         }
-        
+
         _uiState.update { currentState ->
             currentState.copy(
                 currentPlayerIndex = currentState.currentPlayerIndex + 1
@@ -84,19 +73,19 @@ class AppViewModel : ViewModel() {
         }
         return true
     }
-    
+
     // 게임 결과 저장
     fun saveGameResult(result: GameResult) {
         val currentPlayerIndex = _uiState.value.currentPlayerIndex
         val updatedPlayers = _uiState.value.players.toMutableList()
-        
+
         // 현재 플레이어의 결과 저장
         updatedPlayers[currentPlayerIndex].gameResults.add(result)
-        
+
         // 결과 목록에 추가
         val updatedResults = _uiState.value.currentGameResults.toMutableList()
         updatedResults.add(Pair(updatedPlayers[currentPlayerIndex], result))
-        
+
         _uiState.update { currentState ->
             currentState.copy(
                 players = updatedPlayers,
@@ -104,72 +93,78 @@ class AppViewModel : ViewModel() {
             )
         }
     }
-    
+
     // 게임 결과 정렬 및 순위 계산
     fun calculateRanks() {
         viewModelScope.launch {
             val currentResults = _uiState.value.currentGameResults
             val game = _uiState.value.selectedGame ?: return@launch
-            
+
             // 게임 타입에 따라 정렬 기준 설정
             val sortedResults = when (game.gameType) {
                 GameType.EXACT_STOP -> {
                     // 목표 시간과 가장 가까운 순서로 정렬
-                    currentResults.sortedBy { (_, result) -> 
+                    currentResults.sortedBy { (_, result) ->
                         abs(result.timeTaken - result.targetTime)
                     }
                 }
+
                 GameType.SLOWEST_STOP -> {
                     // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
                     val limitTime = GameTimeConstants.SLOWEST_STOP_LIMIT
-                    currentResults.filter { (_, result) -> 
-                        result.timeTaken <= limitTime 
-                    }.sortedByDescending { (_, result) -> 
-                        result.timeTaken 
+                    currentResults.filter { (_, result) ->
+                        result.timeTaken <= limitTime
+                    }.sortedByDescending { (_, result) ->
+                        result.timeTaken
                     }
                 }
+
                 GameType.RANDOM_MATCH -> {
                     // 목표 시간과 가장 가까운 순서로 정렬
-                    currentResults.sortedBy { (_, result) -> 
+                    currentResults.sortedBy { (_, result) ->
                         abs(result.timeTaken - result.targetTime)
                     }
                 }
+
                 GameType.LAST_PERSON -> {
                     // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
                     val limitTime = GameTimeConstants.LAST_PERSON_LIMIT
-                    currentResults.filter { (_, result) -> 
-                        result.timeTaken <= limitTime 
-                    }.sortedByDescending { (_, result) -> 
-                        result.timeTaken 
+                    currentResults.filter { (_, result) ->
+                        result.timeTaken <= limitTime
+                    }.sortedByDescending { (_, result) ->
+                        result.timeTaken
                     }
                 }
+
                 GameType.MS_DIGIT -> {
                     // ms 끝자리 숫자가 큰 순서로 정렬
-                    currentResults.sortedByDescending { (_, result) -> 
-                        result.specialValue 
+                    currentResults.sortedByDescending { (_, result) ->
+                        result.specialValue
                     }
                 }
             }
-            
+
             // 순위 부여 및 승자 설정
             val rankedResults = sortedResults.mapIndexed { index, (player, result) ->
                 val updatedResult = result.copy(
                     rank = index + 1,
                     isWinner = index == 0
                 )
-                
+
                 // 플레이어의 결과 업데이트
                 val playerIndex = _uiState.value.players.indexOf(player)
                 if (playerIndex >= 0) {
-                    val gameResultIndex = _uiState.value.players[playerIndex].gameResults.indexOf(result)
+                    val gameResultIndex =
+                        _uiState.value.players[playerIndex].gameResults.indexOf(result)
                     if (gameResultIndex >= 0) {
-                        _uiState.value.players[playerIndex].gameResults[gameResultIndex] = updatedResult
+                        _uiState.value.players[playerIndex].gameResults[gameResultIndex] =
+                            updatedResult
                     }
                 }
-                
+
                 Pair(player, updatedResult)
             }
-            
+
             // 승자에게 점수 부여
             if (rankedResults.isNotEmpty()) {
                 val winner = rankedResults.first().first
@@ -179,7 +174,7 @@ class AppViewModel : ViewModel() {
                     updatedPlayers[winnerIndex] = updatedPlayers[winnerIndex].copy(
                         score = updatedPlayers[winnerIndex].score + 1
                     )
-                    
+
                     _uiState.update { currentState ->
                         currentState.copy(
                             players = updatedPlayers,
@@ -190,7 +185,7 @@ class AppViewModel : ViewModel() {
             }
         }
     }
-    
+
     // 벌칙 선택
     fun selectRandomPunishment() {
         val punishment = PunishmentRepository.getRandomPunishment()
@@ -200,7 +195,7 @@ class AppViewModel : ViewModel() {
             )
         }
     }
-    
+
     // 새 게임 시작 준비
     private fun prepareNewGame() {
         _uiState.update { currentState ->
@@ -213,12 +208,12 @@ class AppViewModel : ViewModel() {
             )
         }
     }
-    
+
     // 현재 플레이어의 마지막 게임 결과 제거
     fun removeLastPlayerResult() {
         val currentPlayerIndex = _uiState.value.currentPlayerIndex
         val updatedPlayers = _uiState.value.players.toMutableList()
-        
+
         // 현재 플레이어의 마지막 결과 제거
         if (currentPlayerIndex < updatedPlayers.size) {
             val currentPlayer = updatedPlayers[currentPlayerIndex]
@@ -227,29 +222,29 @@ class AppViewModel : ViewModel() {
                 val updatedResults = currentPlayer.gameResults.toMutableList()
                 // 마지막 결과 제거
                 updatedResults.removeAt(updatedResults.size - 1)
-                
+
                 // 현재 플레이어 업데이트
                 updatedPlayers[currentPlayerIndex] = currentPlayer.copy(
                     gameResults = updatedResults
                 )
             }
         }
-        
+
         // 현재 게임 결과 목록에서도 해당 결과 제거
         val updatedGameResults = _uiState.value.currentGameResults.toMutableList()
         if (updatedGameResults.isNotEmpty()) {
             // 마지막에 추가된 현재 플레이어의 결과를 제거
             // 여러 플레이어가 있을 경우 현재 플레이어의 결과만 제거
-            val playerResults = updatedGameResults.filter { (player, _) -> 
-                updatedPlayers.indexOf(player) == currentPlayerIndex 
+            val playerResults = updatedGameResults.filter { (player, _) ->
+                updatedPlayers.indexOf(player) == currentPlayerIndex
             }
-            
+
             if (playerResults.isNotEmpty()) {
                 // 현재 플레이어의 마지막 결과 제거
                 updatedGameResults.remove(playerResults.last())
             }
         }
-        
+
         _uiState.update { currentState ->
             currentState.copy(
                 players = updatedPlayers,
