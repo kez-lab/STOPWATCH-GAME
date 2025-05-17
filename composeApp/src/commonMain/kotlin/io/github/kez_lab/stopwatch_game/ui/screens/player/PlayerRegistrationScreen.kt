@@ -22,7 +22,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +55,6 @@ import io.github.kez_lab.stopwatch_game.ui.components.NavigationType
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerRegistrationScreen(navController: NavHostController) {
     val appViewModel = LocalAppViewModel.current
@@ -114,7 +112,6 @@ fun PlayerRegistrationScreen(navController: NavHostController) {
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
                 .fillMaxSize()
         ) {
             Text(
@@ -137,7 +134,6 @@ fun PlayerRegistrationScreen(navController: NavHostController) {
                     }
                 },
                 isError = isError,
-                enabled = players.size < 6
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -174,7 +170,6 @@ private fun InputSection(
     onNameChange: (String) -> Unit,
     onAdd: () -> Unit,
     isError: Boolean,
-    enabled: Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -203,10 +198,7 @@ private fun InputSection(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Button(
-            onClick = onAdd,
-            enabled = enabled
-        ) {
+        Button(onClick = onAdd) {
             Icon(
                 imageVector = FeatherIcons.Plus,
                 contentDescription = "추가"
@@ -216,7 +208,10 @@ private fun InputSection(
 }
 
 @Composable
-private fun ColumnScope.PlayerList(players: List<Player>, onRemove: (Player) -> Unit) {
+private fun ColumnScope.PlayerList(
+    players: List<Player>,
+    onRemove: (Player) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .weight(1f)
@@ -229,7 +224,10 @@ private fun ColumnScope.PlayerList(players: List<Player>, onRemove: (Player) -> 
 }
 
 @Composable
-private fun PlayerItem(player: Player, onRemove: () -> Unit) {
+private fun PlayerItem(
+    player: Player,
+    onRemove: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -251,9 +249,9 @@ private fun PlayerItem(player: Player, onRemove: () -> Unit) {
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp)
             )
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             Text(
                 text = player.name,
                 fontSize = 16.sp,
@@ -261,7 +259,7 @@ private fun PlayerItem(player: Player, onRemove: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
-            
+
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = FeatherIcons.Trash2,
@@ -292,9 +290,9 @@ private fun EmptyPlayerHint() {
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "플레이어를 추가해 주세요",
                 fontSize = 16.sp,
