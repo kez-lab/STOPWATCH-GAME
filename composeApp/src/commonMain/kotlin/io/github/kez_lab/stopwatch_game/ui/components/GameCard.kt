@@ -40,10 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import compose.icons.FeatherIcons
-import compose.icons.feathericons.AlertCircle
 import compose.icons.feathericons.Clock
-import compose.icons.feathericons.Users
-import compose.icons.feathericons.ZapOff
 import io.github.kez_lab.stopwatch_game.model.Game
 import io.github.kez_lab.stopwatch_game.model.GameType
 
@@ -241,10 +238,6 @@ fun GameCard(
  */
 @Composable
 private fun getGameIcon(gameType: GameType) = when (gameType) {
-    GameType.EXACT_STOP -> FeatherIcons.Clock
-    GameType.SLOWEST_STOP -> FeatherIcons.ZapOff
-    GameType.RANDOM_MATCH -> FeatherIcons.AlertCircle
-    GameType.LAST_PERSON -> FeatherIcons.Users
     GameType.MS_DIGIT -> FeatherIcons.Clock
 }
 
@@ -253,9 +246,5 @@ private fun getGameIcon(gameType: GameType) = when (gameType) {
  */
 @Composable
 private fun getGameColor(gameType: GameType): Color = when (gameType) {
-    GameType.EXACT_STOP -> MaterialTheme.colorScheme.primary
-    GameType.SLOWEST_STOP -> MaterialTheme.colorScheme.tertiary
-    GameType.RANDOM_MATCH -> MaterialTheme.colorScheme.secondary
-    GameType.LAST_PERSON -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
     GameType.MS_DIGIT -> MaterialTheme.colorScheme.tertiary
 } 

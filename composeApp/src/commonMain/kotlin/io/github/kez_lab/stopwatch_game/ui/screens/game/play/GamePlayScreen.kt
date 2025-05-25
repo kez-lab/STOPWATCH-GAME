@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,13 +53,9 @@ import androidx.compose.ui.util.lerp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
-import compose.icons.feathericons.AlertCircle
-import compose.icons.feathericons.Clock
 import compose.icons.feathericons.PlayCircle
 import compose.icons.feathericons.SkipForward
 import compose.icons.feathericons.Target
-import compose.icons.feathericons.Users
-import compose.icons.feathericons.ZapOff
 import io.github.kez_lab.stopwatch_game.model.Game
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
@@ -138,29 +133,24 @@ fun GamePlayScreen(
 
     // 뒤로가기 처리 함수
     val handleBackPress = {
-        when {
-            // 실행 중이거나 카운트다운 중이면 확인 다이얼로그 표시
-            screenState == GameScreenState.PLAYING || screenState == GameScreenState.COUNTDOWN -> {
+        when (screenState) {
+            GameScreenState.PLAYING, GameScreenState.COUNTDOWN -> {
                 showBackConfirmation = true
             }
             // 게임 인포 화면일 때는 바로 이전 화면으로
-            screenState == GameScreenState.INFO -> {
+            GameScreenState.INFO -> {
                 navController.popBackStack()
             }
             // 결과 화면일 때는 다음 플레이어가 있으면 진행, 없으면 결과 화면으로
-            screenState == GameScreenState.RESULT -> {
+            GameScreenState.RESULT -> {
                 moveToNextPlayer()
             }
-
-            else -> Unit
         }
     }
 
     // 게임 시작 시 타이머 설정
     LaunchedEffect(game) {
-        game?.let {
-            timerViewModel.setGameType(it.gameType)
-        }
+        timerViewModel.setGameType(game.gameType)
     }
 
     // 게임 상태 변경 감지
@@ -193,7 +183,7 @@ fun GamePlayScreen(
             // 햅틱 피드백
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
 
-            val gameType = game?.gameType ?: GameType.EXACT_STOP
+            val gameType = game.gameType
             val specialValue = if (gameType == GameType.MS_DIGIT) {
                 timerUiState.lastDigit
             } else -1
@@ -227,12 +217,11 @@ fun GamePlayScreen(
         ) {
             // 헤더 - 공통 AppBar 사용으로 변경
             AppBar(
-                title = game?.name ?: "",
+                title = game.name,
                 onBackClick = { handleBackPress() },
                 currentPlayer = appUiState.currentPlayer,
                 showPlayerInfo = true,
                 actions = {
-                    // 패스 버튼
                     AppBarActionItem(
                         icon = FeatherIcons.SkipForward,
                         contentDescription = "패스",
@@ -246,13 +235,10 @@ fun GamePlayScreen(
 
             when (screenState) {
                 GameScreenState.INFO -> {
-                    game?.let {
-                        GameInfoCard(
-                            game = it,
-                            targetTime = timerUiState.formattedTargetTime,
-                            onStartGame = { screenState = GameScreenState.COUNTDOWN }
-                        )
-                    }
+                    GameInfoCard(
+                        game = game,
+                        onStartGame = { screenState = GameScreenState.COUNTDOWN }
+                    )
                 }
 
                 GameScreenState.COUNTDOWN -> {
@@ -277,7 +263,7 @@ fun GamePlayScreen(
                 GameScreenState.RESULT -> {
                     GameResultContent(
                         timerUiState = timerUiState,
-                        gameType = game?.gameType ?: GameType.EXACT_STOP,
+                        gameType = game.gameType,
                         onNextButtonClicked = { moveToNextPlayer() }
                     )
                 }
@@ -318,7 +304,6 @@ fun GamePlayScreen(
 @Composable
 private fun GameInfoCard(
     game: Game,
-    targetTime: String,
     onStartGame: () -> Unit
 ) {
     Card(
@@ -358,10 +343,6 @@ private fun GameInfoCard(
                 contentAlignment = Alignment.Center
             ) {
                 val iconVector = when (game.gameType) {
-                    GameType.EXACT_STOP -> FeatherIcons.Clock
-                    GameType.SLOWEST_STOP -> FeatherIcons.ZapOff
-                    GameType.RANDOM_MATCH -> FeatherIcons.AlertCircle
-                    GameType.LAST_PERSON -> FeatherIcons.Users
                     GameType.MS_DIGIT -> FeatherIcons.Target
                 }
 
@@ -395,41 +376,6 @@ private fun GameInfoCard(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // 목표 시간 표시 (있는 경우만)
-            if (game.gameType == GameType.EXACT_STOP) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = FeatherIcons.Target,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "목표 시간: $targetTime",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-            }
 
             // 시작 버튼
             Button(
@@ -582,27 +528,6 @@ private fun GamePlayContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 목표 시간이 있는 게임은 표시
-        if (timerUiState.targetTime > 0 && timerUiState.gameType == GameType.EXACT_STOP) {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                Text(
-                    text = "목표 시간: ${timerUiState.formattedTargetTime}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
         // 타이머 표시
         Box(
             modifier = Modifier
@@ -644,7 +569,6 @@ private fun GameResultContent(
 ) {
     // 결과 애니메이션
     val animationProgress = remember { Animatable(0f) }
-    val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         animationProgress.animateTo(

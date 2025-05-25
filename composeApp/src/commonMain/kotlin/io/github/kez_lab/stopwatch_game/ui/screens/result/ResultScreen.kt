@@ -30,7 +30,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,11 +50,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
-import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.Award
 import compose.icons.feathericons.Clock
 import compose.icons.feathericons.Play
-import compose.icons.feathericons.Target
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.ui.components.AppBar
@@ -179,7 +176,7 @@ fun ResultScreen(navController: NavHostController) {
                         rank = result.rank,
                         isWinner = result.isWinner,
                         specialValue = result.specialValue,
-                        gameType = selectedGame?.gameType ?: GameType.EXACT_STOP,
+                        gameType = selectedGame?.gameType ?: GameType.MS_DIGIT,
                     )
                 }
             }
@@ -434,14 +431,8 @@ private fun ResultItem(
                 modifier = Modifier.weight(1f)
             )
 
-            // 아이콘 (게임 타입에 따라)
-            val icon = when (gameType) {
-                GameType.EXACT_STOP, GameType.RANDOM_MATCH -> FeatherIcons.Target
-                else -> FeatherIcons.Clock
-            }
-
             Icon(
-                imageVector = icon,
+                imageVector = FeatherIcons.Clock,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
