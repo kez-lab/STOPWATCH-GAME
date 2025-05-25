@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
     alias(libs.plugins.buildConfig)
+    alias(libs.plugins.screenshot)
 }
 
 kotlin {
@@ -92,6 +93,7 @@ kotlin {
 android {
     namespace = "io.github.kez_lab.stopwatch_game"
     compileSdk = 35
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
 
     defaultConfig {
         minSdk = 21
@@ -109,6 +111,20 @@ android {
 dependencies {
     androidTestImplementation(libs.androidx.uitest.junit4)
     debugImplementation(libs.androidx.uitest.testManifest)
+    screenshotTestImplementation(libs.androidx.ui.tooling)
+    screenshotTestImplementation(compose.runtime)
+    screenshotTestImplementation(compose.foundation)
+    screenshotTestImplementation(compose.material3)
+    screenshotTestImplementation(compose.components.uiToolingPreview)
+    screenshotTestImplementation(compose.components.resources)
+    screenshotTestImplementation(libs.androidx.navigation.composee)
+    screenshotTestImplementation(libs.androidx.lifecycle.viewmodel)
+    screenshotTestImplementation(libs.androidx.lifecycle.runtime.compose)
+    screenshotTestImplementation(libs.koin.core)
+    screenshotTestImplementation(libs.koin.compose)
+    screenshotTestImplementation(libs.composeIcons.featherIcons)
+    screenshotTestImplementation(libs.mockk)
+    debugImplementation(compose.uiTooling)
 }
 
 compose.desktop {
