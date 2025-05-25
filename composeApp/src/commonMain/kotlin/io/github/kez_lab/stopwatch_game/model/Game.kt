@@ -33,6 +33,7 @@ object GameRepository {
             difficultyLevel = 1
         )
     )
-    
-    fun getGameById(id: String): Game = games.find { it.id == id } ?: throw IllegalArgumentException("Unknown game id")
+
+    fun getGameById(id: String): Game = games.find { it.id == id }
+        ?: throw IllegalArgumentException("Unknown game id: $id")
 } 
