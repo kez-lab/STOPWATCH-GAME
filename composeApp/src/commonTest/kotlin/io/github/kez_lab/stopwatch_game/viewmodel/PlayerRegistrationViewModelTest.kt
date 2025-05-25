@@ -147,9 +147,9 @@ class PlayerRegistrationViewModelTest {
         viewModel.addPlayer()
         viewModel.updatePlayerName(player2.name)
         viewModel.addPlayer()
-        
+        val player1InViewMode = viewModel.uiState.value.players.find { it.name == player1.name }!!
         // When
-        viewModel.removePlayer(player1)
+        viewModel.removePlayer(player1InViewMode)
         
         // Then
         assertEquals(1, viewModel.uiState.value.players.size)
