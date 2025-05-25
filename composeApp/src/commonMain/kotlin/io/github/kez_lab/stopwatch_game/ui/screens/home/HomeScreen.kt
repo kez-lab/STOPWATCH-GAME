@@ -66,7 +66,6 @@ fun SplashScreen(navController: NavHostController) {
     var stage by remember { mutableStateOf(SplashAnimationStage.NONE) }
 
     // 배경 애니메이션 효과
-    val density = LocalDensity.current
     val animatedRotation by animateFloatAsState(
         targetValue = 360f,
         animationSpec = infiniteRepeatable(

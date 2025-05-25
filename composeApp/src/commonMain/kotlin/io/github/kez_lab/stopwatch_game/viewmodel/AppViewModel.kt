@@ -1,3 +1,4 @@
+
 package io.github.kez_lab.stopwatch_game.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -5,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import io.github.kez_lab.stopwatch_game.model.Game
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
-import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.model.Punishment
 import io.github.kez_lab.stopwatch_game.model.PunishmentRepository
@@ -14,15 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-
-/**
- * 게임별 제한 시간 상수 (밀리초 단위)
- */
-object GameTimeConstants {
-    const val SLOWEST_STOP_LIMIT = 10000L     // 가장 느리게 멈춰라 제한 시간 (10초)
-    const val LAST_PERSON_LIMIT = 15000L      // 눈치 싸움 제한 시간 (15초)
-}
 
 /**
  * 앱 전체 상태 뷰모델
@@ -38,7 +29,7 @@ class AppViewModel : ViewModel() {
     fun registerPlayers(players: List<Player>) {
         _uiState.update { currentState ->
             currentState.copy(
-                players = players,
+                players = players.shuffled(),
                 currentPlayerIndex = 0
             )
         }
@@ -100,48 +91,9 @@ class AppViewModel : ViewModel() {
             val currentResults = _uiState.value.currentGameResults
             val game = _uiState.value.selectedGame ?: return@launch
 
-            // 게임 타입에 따라 정렬 기준 설정
-            val sortedResults = when (game.gameType) {
-                GameType.EXACT_STOP -> {
-                    // 목표 시간과 가장 가까운 순서로 정렬
-                    currentResults.sortedBy { (_, result) ->
-                        abs(result.timeTaken - result.targetTime)
-                    }
-                }
-
-                GameType.SLOWEST_STOP -> {
-                    // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
-                    val limitTime = GameTimeConstants.SLOWEST_STOP_LIMIT
-                    currentResults.filter { (_, result) ->
-                        result.timeTaken <= limitTime
-                    }.sortedByDescending { (_, result) ->
-                        result.timeTaken
-                    }
-                }
-
-                GameType.RANDOM_MATCH -> {
-                    // 목표 시간과 가장 가까운 순서로 정렬
-                    currentResults.sortedBy { (_, result) ->
-                        abs(result.timeTaken - result.targetTime)
-                    }
-                }
-
-                GameType.LAST_PERSON -> {
-                    // 가장 늦게 멈춘 순서로 정렬 (제한 시간 초과 X)
-                    val limitTime = GameTimeConstants.LAST_PERSON_LIMIT
-                    currentResults.filter { (_, result) ->
-                        result.timeTaken <= limitTime
-                    }.sortedByDescending { (_, result) ->
-                        result.timeTaken
-                    }
-                }
-
-                GameType.MS_DIGIT -> {
-                    // ms 끝자리 숫자가 큰 순서로 정렬
-                    currentResults.sortedByDescending { (_, result) ->
-                        result.specialValue
-                    }
-                }
+            // MS_DIGIT 게임 타입에 대한 정렬 (ms 끝자리 숫자가 큰 순서로 정렬)
+            val sortedResults = currentResults.sortedByDescending { (_, result) ->
+                result.specialValue
             }
 
             // 순위 부여 및 승자 설정
@@ -257,6 +209,15 @@ class AppViewModel : ViewModel() {
 }
 
 /**
+ * 플레이어 추가 결과 클래스
+ */
+sealed class PlayerAddResult {
+    data object EmptyName : PlayerAddResult()
+    data object DuplicateName : PlayerAddResult()
+    data class Success(val player: Player) : PlayerAddResult()
+}
+
+/**
  * 앱 UI 상태 클래스
  */
 data class AppUiState(
@@ -271,4 +232,4 @@ data class AppUiState(
         get() = if (players.isNotEmpty() && currentPlayerIndex < players.size) {
             players[currentPlayerIndex]
         } else null
-} 
+}
