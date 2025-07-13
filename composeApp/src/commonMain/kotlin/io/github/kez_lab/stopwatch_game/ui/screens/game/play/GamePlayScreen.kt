@@ -89,7 +89,10 @@ fun GamePlayScreen(
     gameId: String
 ) {
     val appViewModel = LocalAppViewModel.current
-    val timerViewModel: GameTimerViewModel = viewModel()
+    val timerViewModel: GameTimerViewModel = viewModel {
+        GameTimerViewModel()
+    }
+
     val hapticFeedback = LocalHapticFeedback.current
 
     // 현재 게임

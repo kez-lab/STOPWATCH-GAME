@@ -28,7 +28,10 @@ import io.github.kez_lab.stopwatch_game.viewmodel.PlayerRegistrationViewModel
 @Composable
 fun PlayerRegistrationScreen(navController: NavHostController) {
     val appViewModel = LocalAppViewModel.current
-    val viewModel: PlayerRegistrationViewModel = viewModel()
+    val viewModel: PlayerRegistrationViewModel = viewModel {
+        PlayerRegistrationViewModel()
+    }
+
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(

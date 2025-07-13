@@ -77,6 +77,7 @@ fun ResultScreen(navController: NavHostController) {
     // 게임 선택으로 돌아가기
     val navigateToGameSelection = {
         navController.navigate(Routes.GameSelection) {
+            launchSingleTop = true
             popUpTo(Routes.Result) {
                 inclusive = true
             }

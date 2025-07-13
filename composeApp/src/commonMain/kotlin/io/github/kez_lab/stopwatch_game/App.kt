@@ -10,7 +10,9 @@ import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 
 @Composable
 internal fun App() = AppTheme {
-    val appViewModel: AppViewModel = viewModel()
+    val appViewModel: AppViewModel = viewModel {
+        AppViewModel()
+    }
 
     CompositionLocalProvider(LocalAppViewModel provides appViewModel) {
         AppNavigation()
