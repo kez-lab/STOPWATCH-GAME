@@ -1,6 +1,6 @@
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.compose.reload.ComposeHotRun
+import org.jetbrains.compose.reload.gradle.ComposeHotRun
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
@@ -17,7 +17,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
     androidTarget {
         //https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-test.html
         instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
@@ -86,16 +86,19 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
 
+        sourceSets.all {
+            languageSettings.enableLanguageFeature("ExplicitBackingFields")
+        }
     }
 }
 
 android {
     namespace = "io.github.kez_lab.stopwatch_game"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
 
         applicationId = "io.github.kez_lab.stopwatch_game.androidApp"
         versionCode = 1
