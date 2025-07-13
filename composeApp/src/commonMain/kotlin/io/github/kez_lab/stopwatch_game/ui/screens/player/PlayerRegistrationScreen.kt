@@ -42,13 +42,10 @@ fun PlayerRegistrationScreen(navController: NavHostController) {
         bottomBar = {
             if (uiState.canProceed) {
                 ProceedButton(
+                    modifier = Modifier.padding(bottom = 16.dp),
                     onClick = {
                         appViewModel.registerPlayers(uiState.players)
-                        navController.navigate(Routes.GameSelection) {
-                            popUpTo(Routes.Splash) {
-                                inclusive = true
-                            }
-                        }
+                        navController.navigate(Routes.GameSelection)
                     }
                 )
             }

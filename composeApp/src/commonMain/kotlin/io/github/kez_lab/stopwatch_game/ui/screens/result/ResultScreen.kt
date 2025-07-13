@@ -85,7 +85,7 @@ fun ResultScreen(navController: NavHostController) {
 
     // 벌칙 선택
     LaunchedEffect(Unit) {
-        delay(3000) // 축하 화면 잠시 보여주기
+        delay(3000)
         appViewModel.selectRandomPunishment()
         showCongrats = false
         delay(500)
