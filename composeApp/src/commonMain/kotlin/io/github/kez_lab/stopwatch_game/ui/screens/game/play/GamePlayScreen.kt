@@ -56,7 +56,7 @@ import compose.icons.FeatherIcons
 import compose.icons.feathericons.PlayCircle
 import compose.icons.feathericons.SkipForward
 import compose.icons.feathericons.Target
-import io.github.kez_lab.stopwatch_game.model.Game
+import compose.icons.feathericons.X
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
 import io.github.kez_lab.stopwatch_game.model.GameType
@@ -153,7 +153,7 @@ fun GamePlayScreen(
 
     // 게임 시작 시 타이머 설정
     LaunchedEffect(game) {
-        timerViewModel.setGameType(game.gameType)
+        timerViewModel.setGameType(game)
     }
 
     // 게임 상태 변경 감지
@@ -186,8 +186,7 @@ fun GamePlayScreen(
             // 햅틱 피드백
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
 
-            val gameType = game.gameType
-            val specialValue = if (gameType == GameType.MS_DIGIT) {
+            val specialValue = if (game == GameType.RandomMS) {
                 timerUiState.lastDigit
             } else -1
 
@@ -200,10 +199,8 @@ fun GamePlayScreen(
                 specialValue = specialValue
             )
 
-            // 결과 저장
             appViewModel.saveGameResult(result)
-
-            // 약간의 지연 후 결과 화면으로 전환 (시각적 피드백을 위해)
+            // 시각적 피드백을 위해 약간의 지연 후 결과 화면으로 전환
             delay(300)
             screenState = GameScreenState.RESULT
         }
@@ -220,7 +217,7 @@ fun GamePlayScreen(
         ) {
             // 헤더 - 공통 AppBar 사용으로 변경
             AppBar(
-                title = game.name,
+                title = game.label,
                 onBackClick = { handleBackPress() },
                 currentPlayer = appUiState.currentPlayer,
                 showPlayerInfo = true,
@@ -266,7 +263,7 @@ fun GamePlayScreen(
                 GameScreenState.RESULT -> {
                     GameResultContent(
                         timerUiState = timerUiState,
-                        gameType = game.gameType,
+                        game = game,
                         onNextButtonClicked = { moveToNextPlayer() }
                     )
                 }
@@ -306,7 +303,7 @@ fun GamePlayScreen(
  */
 @Composable
 private fun GameInfoCard(
-    game: Game,
+    game: GameType,
     onStartGame: () -> Unit
 ) {
     Card(
@@ -345,8 +342,9 @@ private fun GameInfoCard(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                val iconVector = when (game.gameType) {
-                    GameType.MS_DIGIT -> FeatherIcons.Target
+                val iconVector = when (game) {
+                    GameType.RandomMS -> FeatherIcons.Target
+                    GameType.CONG_PAT -> FeatherIcons.X
                 }
 
                 Icon(
@@ -361,7 +359,7 @@ private fun GameInfoCard(
 
             // 게임 이름
             Text(
-                text = game.name,
+                text = game.label,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -567,7 +565,7 @@ private fun GamePlayContent(
 @Composable
 private fun GameResultContent(
     timerUiState: TimerUiState,
-    gameType: GameType,
+    game: GameType,
     onNextButtonClicked: () -> Unit,
 ) {
     // 결과 애니메이션
@@ -644,7 +642,7 @@ private fun GameResultContent(
         }
 
         // ms를 높여라 게임이면 끝자리 표시
-        if (gameType == GameType.MS_DIGIT && timerUiState.lastDigit >= 0) {
+        if (game == GameType.RandomMS && timerUiState.lastDigit >= 0) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Box(

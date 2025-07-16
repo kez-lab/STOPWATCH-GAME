@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Clock
-import io.github.kez_lab.stopwatch_game.model.Game
+import compose.icons.feathericons.Watch
 import io.github.kez_lab.stopwatch_game.model.GameType
 
 /**
@@ -51,7 +51,7 @@ import io.github.kez_lab.stopwatch_game.model.GameType
  */
 @Composable
 fun GameCard(
-    game: Game,
+    game: GameType,
     onClick: () -> Unit
 ) {
     // 호버 상태 관리
@@ -80,7 +80,7 @@ fun GameCard(
     )
 
     // 게임 타입에 따른 컬러
-    val gameColor = getGameColor(game.gameType)
+    val gameColor = getGameColor(game)
 
     Card(
         onClick = {
@@ -123,7 +123,7 @@ fun GameCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = getGameIcon(game.gameType),
+                    imageVector = getGameIcon(game),
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
                     tint = gameColor
@@ -153,7 +153,7 @@ fun GameCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = getGameIcon(game.gameType),
+                        imageVector = getGameIcon(game),
                         contentDescription = null,
                         modifier = Modifier.size(32.dp),
                         tint = Color.White
@@ -167,7 +167,7 @@ fun GameCard(
                 ) {
                     // 게임 이름
                     Text(
-                        text = game.name,
+                        text = game.label,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -237,14 +237,16 @@ fun GameCard(
  * 게임 타입에 따른 아이콘 반환
  */
 @Composable
-private fun getGameIcon(gameType: GameType) = when (gameType) {
-    GameType.MS_DIGIT -> FeatherIcons.Clock
+private fun getGameIcon(game: GameType) = when (game) {
+    GameType.RandomMS -> FeatherIcons.Clock
+    GameType.CONG_PAT -> FeatherIcons.Watch
 }
 
 /**
  * 게임 타입에 따른 색상 반환
  */
 @Composable
-private fun getGameColor(gameType: GameType): Color = when (gameType) {
-    GameType.MS_DIGIT -> MaterialTheme.colorScheme.tertiary
-} 
+private fun getGameColor(game: GameType): Color = when (game) {
+    GameType.RandomMS -> MaterialTheme.colorScheme.tertiary
+    GameType.CONG_PAT -> MaterialTheme.colorScheme.primary
+}

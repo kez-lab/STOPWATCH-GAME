@@ -109,7 +109,6 @@ fun ResultScreen(navController: NavHostController) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 공통 AppBar 사용
             AppBar(
                 title = "게임 결과",
                 onBackClick = navigateToGameSelection
@@ -120,7 +119,7 @@ fun ResultScreen(navController: NavHostController) {
             // 게임 이름
             selectedGame?.let { game ->
                 Text(
-                    text = game.name,
+                    text = game.label,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -177,7 +176,7 @@ fun ResultScreen(navController: NavHostController) {
                         rank = result.rank,
                         isWinner = result.isWinner,
                         specialValue = result.specialValue,
-                        gameType = selectedGame?.gameType ?: GameType.MS_DIGIT,
+                        game = selectedGame ?: GameType.RandomMS,
                     )
                 }
             }
@@ -374,7 +373,7 @@ private fun ResultItem(
     rank: Int,
     isWinner: Boolean,
     specialValue: Int = -1,
-    gameType: GameType,
+    game: GameType,
 ) {
     Card(
         modifier = Modifier
@@ -442,7 +441,7 @@ private fun ResultItem(
             Spacer(modifier = Modifier.size(8.dp))
 
             // 시간 또는 특수값 표시
-            if (gameType == GameType.MS_DIGIT && specialValue >= 0) {
+            if (game == GameType.RandomMS && specialValue >= 0) {
                 Text(
                     text = specialValue.toString(),
                     fontSize = 18.sp,
