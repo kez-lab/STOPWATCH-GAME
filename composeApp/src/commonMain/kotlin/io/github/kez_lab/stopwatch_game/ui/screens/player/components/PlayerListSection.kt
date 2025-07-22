@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -65,14 +66,14 @@ private fun EmptyPlayerHint(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp),
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Spacer(Modifier.weight(0.4f))
             Icon(
                 imageVector = FeatherIcons.Users,
                 contentDescription = null,
@@ -87,6 +88,7 @@ private fun EmptyPlayerHint(
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
+            Spacer(Modifier.weight(0.6f))
         }
     }
 }

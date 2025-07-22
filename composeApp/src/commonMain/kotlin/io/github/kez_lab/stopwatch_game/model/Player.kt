@@ -20,10 +20,11 @@ data class Player(
  */
 data class GameResult(
     val gameId: String,
-    val timeTaken: Long, // 밀리초 단위
-    val targetTime: Long = 0, // 목표 시간 (밀리초)
-    val formattedTime: String, // 표시용 시간
-    val rank: Int = 0, // 게임에서의 등수
+    val timeTaken: Long,
+    val targetTime: Long,
+    val formattedTime: String,
+    val specialValue: Int = -1,
+    val specialValue2: Int? = null, // 콩콩팥팥 게임의 두 번째 숫자를 위해 추가
+    val rank: Int = 0,
     val isWinner: Boolean = false,
-    val specialValue: Int = -1 // 게임 종류에 따른 특수값 (예: ms의 끝자리)
 ) 

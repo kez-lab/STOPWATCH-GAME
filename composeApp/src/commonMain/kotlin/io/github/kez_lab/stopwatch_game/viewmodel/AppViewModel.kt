@@ -84,10 +84,26 @@ class AppViewModel : ViewModel() {
     fun calculateRanks() {
         viewModelScope.launch {
             val currentResults = _uiState.value.currentGameResults
+            val gameType = _uiState.value.selectedGame
 
-            // MS_DIGIT 게임 타입에 대한 정렬 (ms 끝자리 숫자가 큰 순서로 정렬)
-            val sortedResults = currentResults.sortedByDescending { (_, result) ->
-                result.specialValue
+            // 게임 타입에 따라 정렬
+            val sortedResults = when (gameType) {
+                GameType.CONG_PAT -> {
+                    // 두 소수점 숫자의 곱이 낮은 순서로 정렬 (0에 가까울수록 순위가 높음)
+                    currentResults.sortedByDescending { (_, result) ->
+                        val first = result.specialValue
+                        val second = result.specialValue2 ?: -1
+                        if (first != -1 && second != -1) first * second else Int.MAX_VALUE
+                    }
+                }
+                GameType.RandomMS -> {
+                    // ms 끝자리 숫자가 큰 순서로 정렬
+                    currentResults.sortedByDescending { (_, result) -> result.specialValue }
+                }
+                else -> {
+                    // 기본: 시간�� 적게 걸린 순서로 정렬
+                    currentResults.sortedBy { (_, result) -> result.timeTaken }
+                }
             }
 
             // 순위 부여 및 승자 설정
@@ -96,29 +112,18 @@ class AppViewModel : ViewModel() {
                     rank = index + 1,
                     isWinner = index == 0
                 )
-
-                // 플레이어의 결과 업데이트
-                val playerIndex = _uiState.value.players.indexOf(player)
-                if (playerIndex >= 0) {
-                    val gameResultIndex =
-                        _uiState.value.players[playerIndex].gameResults.indexOf(result)
-                    if (gameResultIndex >= 0) {
-                        _uiState.value.players[playerIndex].gameResults[gameResultIndex] =
-                            updatedResult
-                    }
-                }
-
                 Pair(player, updatedResult)
             }
 
             // 승자에게 점수 부여
             if (rankedResults.isNotEmpty()) {
                 val winner = rankedResults.first().first
-                val winnerIndex = _uiState.value.players.indexOf(winner)
+                val winnerIndex = _uiState.value.players.indexOfFirst { it.id == winner.id }
                 if (winnerIndex >= 0) {
                     val updatedPlayers = _uiState.value.players.toMutableList()
-                    updatedPlayers[winnerIndex] = updatedPlayers[winnerIndex].copy(
-                        score = updatedPlayers[winnerIndex].score + 1
+                    val oldPlayer = updatedPlayers[winnerIndex]
+                    updatedPlayers[winnerIndex] = oldPlayer.copy(
+                        score = oldPlayer.score + 1
                     )
 
                     _uiState.update { currentState ->
@@ -127,6 +132,8 @@ class AppViewModel : ViewModel() {
                             rankedResults = rankedResults
                         )
                     }
+                } else {
+                     _uiState.update { it.copy(rankedResults = rankedResults) }
                 }
             }
         }

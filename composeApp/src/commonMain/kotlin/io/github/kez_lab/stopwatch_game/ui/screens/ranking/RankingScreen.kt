@@ -1,4 +1,4 @@
-package io.github.kez_lab.stopwatch_game.ui.screens.result
+package io.github.kez_lab.stopwatch_game.ui.screens.ranking
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -176,6 +176,7 @@ fun ResultScreen(navController: NavHostController) {
                         rank = result.rank,
                         isWinner = result.isWinner,
                         specialValue = result.specialValue,
+                        specialValue2 = result.specialValue2,
                         game = selectedGame ?: GameType.RandomMS,
                     )
                 }
@@ -193,7 +194,7 @@ fun ResultScreen(navController: NavHostController) {
                     onClick = {
                         uiState.selectedGame?.let { game ->
                             appViewModel.selectGame(game.id)
-                            navController.navigate(Routes.GamePlay(game.id)) {
+                            navController.navigate(Routes.GamePlay(game)) {
                                 launchSingleTop = true
                                 popUpTo(Routes.Result) {
                                     inclusive = true
@@ -373,6 +374,7 @@ private fun ResultItem(
     rank: Int,
     isWinner: Boolean,
     specialValue: Int = -1,
+    specialValue2: Int? = null,
     game: GameType,
 ) {
     Card(
@@ -431,29 +433,54 @@ private fun ResultItem(
                 modifier = Modifier.weight(1f)
             )
 
-            Icon(
-                imageVector = FeatherIcons.Clock,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-            )
-
-            Spacer(modifier = Modifier.size(8.dp))
-
-            // 시간 또는 특수값 표시
-            if (game == GameType.RandomMS && specialValue >= 0) {
-                Text(
-                    text = specialValue.toString(),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            } else {
-                Text(
-                    text = time,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+            // 게임별 결과 표시
+            when {
+                game == GameType.CONG_PAT && specialValue2 != null -> {
+                    val first = specialValue
+                    val second = specialValue2
+                    val total = if(first != -1 && second != -1) first * second else 0
+                    Text(
+                        text = "$first × $second = ",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = "$total",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                game == GameType.RandomMS && specialValue >= 0 -> {
+                    Icon(
+                        imageVector = FeatherIcons.Award,
+                        contentDescription = "점수",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = specialValue.toString(),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                else -> {
+                    Icon(
+                        imageVector = FeatherIcons.Clock,
+                        contentDescription = "시간",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = time,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

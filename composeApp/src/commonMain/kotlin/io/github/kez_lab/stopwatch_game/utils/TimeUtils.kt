@@ -48,12 +48,12 @@ object TimeUtils {
     }
     
     /**
-     * 밀리초 끝자리 추출
+     * 밀리초 소수점 마지막 자릿수 추출
      * @param timeInMillis 밀리초
-     * @return 끝자리 숫자 (0-9)
+     * @return 소수점 마지막 자릿수 (0-9)
      */
     fun getLastDigit(timeInMillis: Long): Int {
-        return (timeInMillis % 10).toInt()
+        return ((timeInMillis % 1000) % 10).toInt()
     }
     
     /**
