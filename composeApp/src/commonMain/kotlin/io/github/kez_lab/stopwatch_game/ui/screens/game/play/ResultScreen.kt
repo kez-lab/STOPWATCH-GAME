@@ -47,7 +47,7 @@ internal fun ResultScreen(
 ) {
     val appViewModel: AppViewModel = LocalAppViewModel.current
     val appUiState by appViewModel.uiState.collectAsState()
-    val gameResult = remember { appUiState.currentPlayer?.gameResults?.lastOrNull() }
+    val gameResult = appUiState.currentPlayer?.gameResults?.lastOrNull()
 
     // Animation
     val animationProgress = remember { Animatable(0f) }
