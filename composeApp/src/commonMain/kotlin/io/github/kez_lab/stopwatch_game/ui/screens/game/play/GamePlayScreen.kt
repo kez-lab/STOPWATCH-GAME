@@ -1,28 +1,12 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.game.play
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,183 +14,93 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.lerp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import compose.icons.FeatherIcons
-import compose.icons.feathericons.PlayCircle
 import compose.icons.feathericons.SkipForward
-import compose.icons.feathericons.Target
-import io.github.kez_lab.stopwatch_game.model.Game
-import io.github.kez_lab.stopwatch_game.model.GameRepository
-import io.github.kez_lab.stopwatch_game.model.GameResult
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.components.AppBarActionItem
-import io.github.kez_lab.stopwatch_game.ui.components.TimerButton
-import io.github.kez_lab.stopwatch_game.ui.components.TimerDisplay
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.GameTimerViewModel
-import io.github.kez_lab.stopwatch_game.viewmodel.TimerUiState
-import kotlinx.coroutines.delay
 
 /**
- * 게임 화면 상태 열거형
+ * 중첩 네비게이션 라우트
  */
-enum class GameScreenState {
-    INFO,       // 게임 설명 화면
-    COUNTDOWN,  // 카운트다운 화면
-    PLAYING,    // 게임 플레이 화면
-    RESULT      // 결과 화면
+internal sealed class GamePlayRoutes(val route: String) {
+    data object Ready : GamePlayRoutes("ready")
+    data object Countdown : GamePlayRoutes("countdown")
+    data object Playing : GamePlayRoutes("playing")
+    data object Result : GamePlayRoutes("result")
 }
 
 /**
- * 게임 플레이 화면
+ * 게임 플레이 화면 (중첩 네비게이션 호스트)
  */
 @Composable
 fun GamePlayScreen(
     navController: NavHostController,
-    gameId: String
+    gameType: GameType,
 ) {
     val appViewModel = LocalAppViewModel.current
-    val timerViewModel: GameTimerViewModel = viewModel {
-        GameTimerViewModel()
-    }
-
-    val hapticFeedback = LocalHapticFeedback.current
-
-    // 현재 게임
-    val game = remember { GameRepository.getGameById(gameId) }
-
-    // 앱 상태
     val appUiState by appViewModel.uiState.collectAsState()
-    val timerUiState by timerViewModel.uiState.collectAsState()
 
-    // 화면 상태 관리
-    var screenState by remember { mutableStateOf(GameScreenState.INFO) }
-    var countdown by remember { mutableStateOf(3) }
+    val timerViewModel: GameTimerViewModel = viewModel { GameTimerViewModel(gameType) }
+    val uiState by timerViewModel.uiState.collectAsState()
+    val game = uiState.game
 
-    // 뒤로가기 확인 다이얼로그 상태
-    var showBackConfirmation by remember { mutableStateOf(false) }
+    val nestedNavController = rememberNavController()
+    var showBackConfirmation by rememberSaveable { mutableStateOf(false) }
 
-    // 게임 종료 처리 함수
+    // 게임 전체 종료 처리
     val finishGame = {
-        // 결과 계산 후 결과 화면으로 이동 (게임 플레이 화면까지 제거)
         appViewModel.calculateRanks()
         navController.navigate(Routes.Result) {
-            popUpTo(Routes.GamePlay(gameId)) {
-                inclusive = true
-            }
+            popUpTo(Routes.GamePlay(gameType.id)) { inclusive = true }
         }
     }
 
-    // 다음 플레이어로 이동하는 통합 함수
+    // 다음 플레이어로 이동
     val moveToNextPlayer = {
-        val hasNextPlayer = appViewModel.moveToNextPlayer()
-        if (hasNextPlayer) {
+        if (appViewModel.moveToNextPlayer()) {
             timerViewModel.resetTimer()
-            screenState = GameScreenState.INFO
-            countdown = 3
-            true
+            // ReadyScreen으로 돌아가기 (백스택 초기화)
+            nestedNavController.navigate(GamePlayRoutes.Ready.route) {
+                popUpTo(nestedNavController.graph.startDestinationId) { inclusive = true }
+            }
         } else {
             finishGame()
-            false
         }
     }
 
-    // 뒤로가기 처리 함수
+    // 뒤로가기 처리
     val handleBackPress = {
-        when (screenState) {
-            GameScreenState.PLAYING, GameScreenState.COUNTDOWN -> {
+        // 중첩 네비게이션의 현재 백스택에 화면이 1개만 남았는지 (즉, ReadyScreen인지) 확인
+        if (nestedNavController.previousBackStackEntry == null) {
+            navController.popBackStack()
+        } else {
+            // 플레이 중(카운트다운 포함) 뒤로가기 시 확인 다이얼로그 표시
+            val currentRoute = nestedNavController.currentBackStackEntry?.destination?.route
+            if (currentRoute == GamePlayRoutes.Playing.route || currentRoute == GamePlayRoutes.Countdown.route) {
                 showBackConfirmation = true
-            }
-            // 게임 인포 화면일 때는 바로 이전 화면으로
-            GameScreenState.INFO -> {
-                navController.popBackStack()
-            }
-            // 결과 화면일 때는 다음 플레이어가 있으면 진행, 없으면 결과 화면으로
-            GameScreenState.RESULT -> {
-                moveToNextPlayer()
+            } else {
+                nestedNavController.popBackStack()
             }
         }
     }
 
-    // 게임 시작 시 타이머 설정
+    // 게임 시작 시 타이머 설정 (한 번만 실행)
     LaunchedEffect(game) {
-        timerViewModel.setGameType(game.gameType)
-    }
-
-    // 게임 상태 변경 감지
-    LaunchedEffect(screenState) {
-        when (screenState) {
-            GameScreenState.COUNTDOWN -> {
-                // 카운트다운 시작
-                countdown = 3
-                delay(1000)
-                countdown = 2
-                delay(1000)
-                countdown = 1
-                delay(1000)
-
-                // 타이머 시작
-                timerViewModel.startTimer()
-                screenState = GameScreenState.PLAYING
-
-                // 햅틱 피드백
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            }
-
-            else -> Unit
-        }
-    }
-
-    // 타이머가 완료되었을 때 결과 저장
-    LaunchedEffect(timerUiState.isFinished) {
-        if (timerUiState.isFinished && screenState == GameScreenState.PLAYING) {
-            // 햅틱 피드백
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-
-            val gameType = game.gameType
-            val specialValue = if (gameType == GameType.MS_DIGIT) {
-                timerUiState.lastDigit
-            } else -1
-
-            // 게임 결과 생성
-            val result = GameResult(
-                gameId = gameId,
-                timeTaken = timerUiState.elapsedTime,
-                targetTime = timerUiState.targetTime,
-                formattedTime = timerUiState.formattedTime,
-                specialValue = specialValue
-            )
-
-            // 결과 저장
-            appViewModel.saveGameResult(result)
-
-            // 약간의 지연 후 결과 화면으로 전환 (시각적 피드백을 위해)
-            delay(300)
-            screenState = GameScreenState.RESULT
-        }
+        timerViewModel.setGameType(game)
     }
 
     Box(
@@ -218,9 +112,8 @@ fun GamePlayScreen(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 헤더 - 공통 AppBar 사용으로 변경
             AppBar(
-                title = game.name,
+                title = game.label,
                 onBackClick = { handleBackPress() },
                 currentPlayer = appUiState.currentPlayer,
                 showPlayerInfo = true,
@@ -229,45 +122,41 @@ fun GamePlayScreen(
                         icon = FeatherIcons.SkipForward,
                         contentDescription = "패스",
                         onClick = { /* TODO: 패스 기능 구현 */ },
-                        enabled = false // 현재 비활성화 상태
+                        enabled = false
                     )
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (screenState) {
-                GameScreenState.INFO -> {
-                    GameInfoCard(
+            // 중첩 NavHost
+            NavHost(
+                navController = nestedNavController,
+                startDestination = GamePlayRoutes.Ready.route
+            ) {
+                composable(GamePlayRoutes.Ready.route) {
+                    ReadyScreen(
+                        navController = nestedNavController,
+                        game = game
+                    )
+                }
+                composable(GamePlayRoutes.Countdown.route) {
+                    CountdownScreen(
+                        navController = nestedNavController,
+                        timerViewModel = timerViewModel
+                    )
+                }
+                composable(GamePlayRoutes.Playing.route) {
+                    PlayingScreen(
+                        navController = nestedNavController,
                         game = game,
-                        onStartGame = { screenState = GameScreenState.COUNTDOWN }
+                        timerViewModel = timerViewModel,
                     )
                 }
-
-                GameScreenState.COUNTDOWN -> {
-                    CountdownDisplay(
-                        countdown = countdown,
-                        onCancel = {
-                            // 카운트다운 취소하고 정보 화면으로 돌아가기
-                            screenState = GameScreenState.INFO
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        }
-                    )
-                }
-
-                GameScreenState.PLAYING -> {
-                    GamePlayContent(
-                        timerUiState = timerUiState,
-                        onStopClick = { timerViewModel.stopTimer() },
-                        onStartClick = { timerViewModel.startTimer() },
-                    )
-                }
-
-                GameScreenState.RESULT -> {
-                    GameResultContent(
-                        timerUiState = timerUiState,
-                        gameType = game.gameType,
-                        onNextButtonClicked = { moveToNextPlayer() }
+                composable(GamePlayRoutes.Result.route) {
+                    ResultScreen(
+                        game = game,
+                        onNextPlayer = { moveToNextPlayer() }
                     )
                 }
             }
@@ -283,433 +172,15 @@ fun GamePlayScreen(
                     TextButton(
                         onClick = {
                             showBackConfirmation = false
-                            navController.popBackStack()
+                            navController.popBackStack() // 상위 네비게이션으로 돌아감
                         }
-                    ) {
-                        Text("종료")
-                    }
+                    ) { Text("종료") }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = { showBackConfirmation = false }
-                    ) {
+                    TextButton(onClick = { showBackConfirmation = false }) {
                         Text("계속 진행")
                     }
                 }
-            )
-        }
-    }
-}
-
-/**
- * 게임 인포 카드 컴포넌트
- */
-@Composable
-private fun GameInfoCard(
-    game: Game,
-    onStartGame: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(20.dp),
-                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // 게임 타입 아이콘
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            )
-                        )
-                    )
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                val iconVector = when (game.gameType) {
-                    GameType.MS_DIGIT -> FeatherIcons.Target
-                }
-
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 게임 이름
-            Text(
-                text = game.name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 게임 설명
-            Text(
-                text = game.description,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 시작 버튼
-            Button(
-                onClick = onStartGame,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(
-                        elevation = 6.dp,
-                        shape = RoundedCornerShape(28.dp)
-                    ),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.PlayCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "시작하기",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-
-/**
- * 게임 카운트다운 화면
- */
-@Composable
-private fun CountdownDisplay(
-    countdown: Int,
-    onCancel: () -> Unit
-) {
-    // 게임 느낌의 애니메이션 효과
-    val animationProgress = remember { Animatable(0f) }
-    val countdownColor = MaterialTheme.colorScheme.primary
-
-    LaunchedEffect(countdown) {
-        animationProgress.snapTo(0f)
-        animationProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 900,
-                easing = FastOutSlowInEasing
-            )
-        )
-    }
-
-    val scale = lerp(2f, 1f, animationProgress.value)
-    val alpha = lerp(0f, 1f, animationProgress.value)
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .drawBehind {
-                // 게임스러운 배경 원
-                drawCircle(
-                    color = countdownColor.copy(alpha = 0.1f * animationProgress.value),
-                    radius = size.minDimension * 0.6f * (1f + (1f - animationProgress.value))
-                )
-
-                // 동심원 애니메이션
-                drawCircle(
-                    color = countdownColor.copy(alpha = 0.05f),
-                    radius = size.minDimension * 0.5f * (1f + (1f - animationProgress.value)),
-                    style = Stroke(width = 8f)
-                )
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "준비...",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.alpha(alpha)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = countdown.toString(),
-                fontSize = 160.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = countdownColor,
-                modifier = Modifier
-                    .scale(scale)
-                    .alpha(alpha)
-                    .drawBehind {
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    countdownColor.copy(alpha = 0.3f),
-                                    Color.Transparent
-                                ),
-                                radius = size.minDimension * 0.8f
-                            ),
-                            radius = size.minDimension * 0.5f
-                        )
-                    }
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // 취소 버튼 추가
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                ),
-                modifier = Modifier
-                    .alpha(alpha)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "준비 취소",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-
-/**
- * 게임 실행 화면
- */
-@Composable
-private fun GamePlayContent(
-    timerUiState: TimerUiState,
-    onStopClick: () -> Unit,
-    onStartClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // 타이머 표시
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-            TimerDisplay(
-                displayTime = timerUiState.formattedTime,
-                isRunning = timerUiState.isRunning,
-                isFinished = timerUiState.isFinished
-            )
-        }
-
-        Spacer(modifier = Modifier.height(60.dp))
-
-        // 타이머 컨트롤 버튼
-        TimerButton(
-            isRunning = timerUiState.isRunning,
-            isFinished = timerUiState.isFinished,
-            onClick = {
-                if (timerUiState.isRunning) {
-                    onStopClick()
-                } else {
-                    onStartClick()
-                }
-            }
-        )
-    }
-}
-
-/**
- * 게임 결과 화면
- */
-@Composable
-private fun GameResultContent(
-    timerUiState: TimerUiState,
-    gameType: GameType,
-    onNextButtonClicked: () -> Unit,
-) {
-    // 결과 애니메이션
-    val animationProgress = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        animationProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 1000,
-                easing = FastOutSlowInEasing
-            )
-        )
-    }
-
-    // 햅틱 피드백 (게임 결과 발표시 진동 효과)
-    val hapticFeedback = LocalHapticFeedback.current
-    LaunchedEffect(Unit) {
-        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-        delay(300)
-        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // 결과 상태 텍스트 (타임아웃 또는 완료)
-        Box(
-            modifier = Modifier
-                .graphicsLayer {
-                    alpha = animationProgress.value
-                    scaleX = animationProgress.value
-                    scaleY = animationProgress.value
-                }
-        ) {
-            if (timerUiState.isTimeout) {
-                Text(
-                    text = "시간 초과!",
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                )
-            } else {
-                Text(
-                    text = "완료!",
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // 결과 시간 표시
-        Box(
-            modifier = Modifier
-                .graphicsLayer {
-                    alpha = animationProgress.value
-                }
-        ) {
-            // 고정된 결과 표시를 위해 isFinished 파라미터 추가
-            val resultTime = remember { timerUiState.formattedTime }
-            TimerDisplay(
-                displayTime = resultTime,
-                isFinished = true,
-            )
-        }
-
-        // ms를 높여라 게임이면 끝자리 표시
-        if (gameType == GameType.MS_DIGIT && timerUiState.lastDigit >= 0) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Box(
-                modifier = Modifier
-                    .graphicsLayer {
-                        alpha = animationProgress.value
-                        scaleX = animationProgress.value
-                        scaleY = animationProgress.value
-                    }
-            ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(16.dp),
-                            spotColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
-                        )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "끝자리",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-
-                        Text(
-                            text = "${timerUiState.lastDigit}",
-                            fontSize = 80.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // 다음 버튼
-        Button(
-            onClick = onNextButtonClicked,
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp)
-                .graphicsLayer {
-                    alpha = animationProgress.value
-                },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text(
-                text = "다음 플레이어",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
             )
         }
     }

@@ -2,14 +2,15 @@ package io.github.kez_lab.stopwatch_game.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.kez_lab.stopwatch_game.model.Game
 import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
+import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.model.Punishment
 import io.github.kez_lab.stopwatch_game.model.PunishmentRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -18,12 +19,12 @@ import kotlinx.coroutines.launch
  */
 class AppViewModel : ViewModel() {
 
-    val uiState: StateFlow<AppUiState>
-        field = MutableStateFlow(AppUiState())
+    private val _uiState = MutableStateFlow(AppUiState())
+    val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
     // 플레이어 등록
     fun registerPlayers(players: List<Player>) {
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 players = players.shuffled(),
                 currentPlayerIndex = 0
@@ -35,7 +36,7 @@ class AppViewModel : ViewModel() {
     fun selectGame(gameId: String) {
         prepareNewGame()
         val game = GameRepository.getGameById(gameId)
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 selectedGame = game
             )
@@ -44,14 +45,14 @@ class AppViewModel : ViewModel() {
 
     // 다음 플레이어로 이동
     fun moveToNextPlayer(): Boolean {
-        val currentIndex = uiState.value.currentPlayerIndex
-        val totalPlayers = uiState.value.players.size
+        val currentIndex = _uiState.value.currentPlayerIndex
+        val totalPlayers = _uiState.value.players.size
 
         if (currentIndex >= totalPlayers - 1) {
             return false // 모든 플레이어가 플레이 완료
         }
 
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 currentPlayerIndex = currentState.currentPlayerIndex + 1
             )
@@ -61,17 +62,17 @@ class AppViewModel : ViewModel() {
 
     // 게임 결과 저장
     fun saveGameResult(result: GameResult) {
-        val currentPlayerIndex = uiState.value.currentPlayerIndex
-        val updatedPlayers = uiState.value.players.toMutableList()
+        val currentPlayerIndex = _uiState.value.currentPlayerIndex
+        val updatedPlayers = _uiState.value.players.toMutableList()
 
         // 현재 플레이어의 결과 저장
         updatedPlayers[currentPlayerIndex].gameResults.add(result)
 
         // 결과 목록에 추가
-        val updatedResults = uiState.value.currentGameResults.toMutableList()
+        val updatedResults = _uiState.value.currentGameResults.toMutableList()
         updatedResults.add(Pair(updatedPlayers[currentPlayerIndex], result))
 
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 players = updatedPlayers,
                 currentGameResults = updatedResults
@@ -82,12 +83,27 @@ class AppViewModel : ViewModel() {
     // 게임 결과 정렬 및 순위 계산
     fun calculateRanks() {
         viewModelScope.launch {
-            val currentResults = uiState.value.currentGameResults
-            val game = uiState.value.selectedGame ?: return@launch
+            val currentResults = _uiState.value.currentGameResults
+            val gameType = _uiState.value.selectedGame
 
-            // MS_DIGIT 게임 타입에 대한 정렬 (ms 끝자리 숫자가 큰 순서로 정렬)
-            val sortedResults = currentResults.sortedByDescending { (_, result) ->
-                result.specialValue
+            // 게임 타입에 따라 정렬
+            val sortedResults = when (gameType) {
+                GameType.CONG_PAT -> {
+                    // 두 소수점 숫자의 곱이 낮은 순서로 정렬 (0에 가까울수록 순위가 높음)
+                    currentResults.sortedByDescending { (_, result) ->
+                        val first = result.specialValue
+                        val second = result.specialValue2 ?: -1
+                        if (first != -1 && second != -1) first * second else 0
+                    }
+                }
+                GameType.RandomMS -> {
+                    // ms 끝자리 숫자가 큰 순서로 정렬
+                    currentResults.sortedByDescending { (_, result) -> result.specialValue }
+                }
+                else -> {
+                    // 기본: 시간�� 적게 걸린 순서로 정렬
+                    currentResults.sortedBy { (_, result) -> result.timeTaken }
+                }
             }
 
             // 순위 부여 및 승자 설정
@@ -96,37 +112,28 @@ class AppViewModel : ViewModel() {
                     rank = index + 1,
                     isWinner = index == 0
                 )
-
-                // 플레이어의 결과 업데이트
-                val playerIndex = uiState.value.players.indexOf(player)
-                if (playerIndex >= 0) {
-                    val gameResultIndex =
-                        uiState.value.players[playerIndex].gameResults.indexOf(result)
-                    if (gameResultIndex >= 0) {
-                        uiState.value.players[playerIndex].gameResults[gameResultIndex] =
-                            updatedResult
-                    }
-                }
-
                 Pair(player, updatedResult)
             }
 
             // 승자에게 점수 부여
             if (rankedResults.isNotEmpty()) {
                 val winner = rankedResults.first().first
-                val winnerIndex = uiState.value.players.indexOf(winner)
+                val winnerIndex = _uiState.value.players.indexOfFirst { it.id == winner.id }
                 if (winnerIndex >= 0) {
-                    val updatedPlayers = uiState.value.players.toMutableList()
-                    updatedPlayers[winnerIndex] = updatedPlayers[winnerIndex].copy(
-                        score = updatedPlayers[winnerIndex].score + 1
+                    val updatedPlayers = _uiState.value.players.toMutableList()
+                    val oldPlayer = updatedPlayers[winnerIndex]
+                    updatedPlayers[winnerIndex] = oldPlayer.copy(
+                        score = oldPlayer.score + 1
                     )
 
-                    uiState.update { currentState ->
+                    _uiState.update { currentState ->
                         currentState.copy(
                             players = updatedPlayers,
                             rankedResults = rankedResults
                         )
                     }
+                } else {
+                     _uiState.update { it.copy(rankedResults = rankedResults) }
                 }
             }
         }
@@ -135,7 +142,7 @@ class AppViewModel : ViewModel() {
     // 벌칙 선택
     fun selectRandomPunishment() {
         val punishment = PunishmentRepository.getRandomPunishment()
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 selectedPunishment = punishment
             )
@@ -144,7 +151,7 @@ class AppViewModel : ViewModel() {
 
     // 새 게임 시작 준비
     private fun prepareNewGame() {
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 currentGameResults = emptyList(),
                 rankedResults = emptyList(),
@@ -157,8 +164,8 @@ class AppViewModel : ViewModel() {
 
     // 현재 플레이어의 마지막 게임 결과 제거
     fun removeLastPlayerResult() {
-        val currentPlayerIndex = uiState.value.currentPlayerIndex
-        val updatedPlayers = uiState.value.players.toMutableList()
+        val currentPlayerIndex = _uiState.value.currentPlayerIndex
+        val updatedPlayers = _uiState.value.players.toMutableList()
 
         // 현재 플레이어의 마지막 결과 제거
         if (currentPlayerIndex < updatedPlayers.size) {
@@ -177,7 +184,7 @@ class AppViewModel : ViewModel() {
         }
 
         // 현재 게임 결과 목록에서도 해당 결과 제거
-        val updatedGameResults = uiState.value.currentGameResults.toMutableList()
+        val updatedGameResults = _uiState.value.currentGameResults.toMutableList()
         if (updatedGameResults.isNotEmpty()) {
             // 마지막에 추가된 현재 플레이어의 결과를 제거
             // 여러 플레이어가 있을 경우 현재 플레이어의 결과만 제거
@@ -191,7 +198,7 @@ class AppViewModel : ViewModel() {
             }
         }
 
-        uiState.update { currentState ->
+        _uiState.update { currentState ->
             currentState.copy(
                 players = updatedPlayers,
                 currentGameResults = updatedGameResults,
@@ -217,7 +224,7 @@ sealed class PlayerAddResult {
 data class AppUiState(
     val players: List<Player> = emptyList(),
     val currentPlayerIndex: Int = 0,
-    val selectedGame: Game? = null,
+    val selectedGame: GameType? = null,
     val currentGameResults: List<Pair<Player, GameResult>> = emptyList(),
     val rankedResults: List<Pair<Player, GameResult>> = emptyList(),
     val selectedPunishment: Punishment? = null

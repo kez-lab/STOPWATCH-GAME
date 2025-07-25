@@ -2,6 +2,7 @@ import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.reload.gradle.ComposeHotRun
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 plugins {
@@ -11,7 +12,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.hotReload)
     alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.room)
     alias(libs.plugins.ksp)
     alias(libs.plugins.buildConfig)
 }
@@ -21,6 +21,12 @@ kotlin {
     androidTarget {
         //https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-test.html
         instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
+    }
+
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        binaries.executable()
     }
 
     jvm()
@@ -56,9 +62,7 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
-            implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.room.runtime)
             implementation(libs.composeIcons.featherIcons)
         }
 
@@ -84,6 +88,11 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+
+        wasmJsMain.dependencies {
+            implementation(libs.ktor.client.js)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
         }
 
         sourceSets.all {
@@ -141,25 +150,7 @@ compose.desktop {
 composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
+
 tasks.register<ComposeHotRun>("runHot") {
     mainClass.set("MainKt")
-}
-
-buildConfig {
-    // BuildConfig configuration here.
-    // https://github.com/gmazzo/gradle-buildconfig-plugin#usage-in-kts
-}
-
-room {
-    schemaDirectory("$projectDir/schemas")
-}
-
-dependencies {
-    with(libs.room.compiler) {
-        add("kspAndroid", this)
-        add("kspJvm", this)
-        add("kspIosX64", this)
-        add("kspIosArm64", this)
-        add("kspIosSimulatorArm64", this)
-    }
 }

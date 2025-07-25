@@ -20,9 +20,9 @@ import kotlin.time.ExperimentalTime
 /**
  * 게임 타이머 뷰모델
  */
-class GameTimerViewModel : ViewModel() {
+class GameTimerViewModel(gameType: GameType = GameType.CONG_PAT) : ViewModel() {
     // 내부 상태
-    private val _uiState = MutableStateFlow(TimerUiState())
+    private val _uiState = MutableStateFlow(TimerUiState(game = gameType))
 
     // 외부에 노출되는 상태
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
@@ -37,10 +37,10 @@ class GameTimerViewModel : ViewModel() {
     private val UI_UPDATE_INTERVAL_PRECISE = 8L
 
     // 게임 타입 설정
-    fun setGameType(gameType: GameType) {
+    fun setGameType(game: GameType) {
         _uiState.update { currentState ->
             currentState.copy(
-                gameType = gameType
+                game = game
             )
         }
 
@@ -153,7 +153,7 @@ data class TimerUiState(
     val targetTime: Long = 0,
     val formattedTime: String = "00:00.000",
     val formattedTargetTime: String = "00:00.000",
-    val gameType: GameType = GameType.MS_DIGIT,
+    val game: GameType = GameType.CONG_PAT,
     val isTimeout: Boolean = false,
     val lastDigit: Int = -1
 )

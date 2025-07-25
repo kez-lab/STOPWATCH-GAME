@@ -21,16 +21,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Shuffle
-import io.github.kez_lab.stopwatch_game.model.GameRepository
+import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.components.AppBarActionItem
 import io.github.kez_lab.stopwatch_game.ui.components.GameCard
@@ -45,7 +43,7 @@ fun GameSelectionScreen(navController: NavHostController) {
     val appViewModel = LocalAppViewModel.current
     
     // 게임 목록
-    val games = remember { GameRepository.games }
+    val games = remember { GameType.entries.toList() }
     
     // 랜덤 선택 버튼 상태
     val showRandomConfirm = remember { mutableStateOf(false) }
