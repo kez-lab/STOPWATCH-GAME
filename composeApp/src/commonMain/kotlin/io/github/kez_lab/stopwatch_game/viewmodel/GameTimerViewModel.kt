@@ -20,9 +20,9 @@ import kotlin.time.ExperimentalTime
 /**
  * 게임 타이머 뷰모델
  */
-class GameTimerViewModel : ViewModel() {
+class GameTimerViewModel(gameType: GameType = GameType.CONG_PAT) : ViewModel() {
     // 내부 상태
-    private val _uiState = MutableStateFlow(TimerUiState())
+    private val _uiState = MutableStateFlow(TimerUiState(game = gameType))
 
     // 외부에 노출되는 상태
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()

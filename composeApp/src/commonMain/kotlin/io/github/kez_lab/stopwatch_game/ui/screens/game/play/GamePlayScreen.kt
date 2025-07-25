@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.SkipForward
+import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.components.AppBarActionItem
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
@@ -48,11 +49,12 @@ internal sealed class GamePlayRoutes(val route: String) {
 @Composable
 fun GamePlayScreen(
     navController: NavHostController,
+    gameType: GameType,
 ) {
     val appViewModel = LocalAppViewModel.current
     val appUiState by appViewModel.uiState.collectAsState()
 
-    val timerViewModel: GameTimerViewModel = viewModel { GameTimerViewModel() }
+    val timerViewModel: GameTimerViewModel = viewModel { GameTimerViewModel(gameType) }
     val uiState by timerViewModel.uiState.collectAsState()
     val game = uiState.game
 
@@ -63,7 +65,7 @@ fun GamePlayScreen(
     val finishGame = {
         appViewModel.calculateRanks()
         navController.navigate(Routes.Result) {
-            popUpTo(Routes.GamePlay(game)) { inclusive = true }
+            popUpTo(Routes.GamePlay(gameType.id)) { inclusive = true }
         }
     }
 

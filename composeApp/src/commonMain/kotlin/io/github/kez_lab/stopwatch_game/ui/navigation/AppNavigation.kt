@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import io.github.kez_lab.stopwatch_game.model.GameType
+import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.ui.screens.game.GameSelectionScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.game.play.GamePlayScreen
 import io.github.kez_lab.stopwatch_game.ui.screens.home.SplashScreen
@@ -31,7 +32,7 @@ sealed class Routes {
     data object GameSelection : Routes()
 
     @Serializable
-    data class GamePlay(val gameType: GameType) : Routes()
+    data class GamePlay(val gameTypeId: String) : Routes()
 
     @Serializable
     data object Result : Routes()
@@ -72,8 +73,10 @@ fun AppNavigation() {
         }
         composable<Routes.GamePlay> { backStackEntry ->
             val args = backStackEntry.toRoute<Routes.GamePlay>()
+            val gameType = GameRepository.getGameById(args.gameTypeId)
             GamePlayScreen(
                 navController = navController,
+                gameType = gameType
             )
         }
         composable<Routes.Result> {

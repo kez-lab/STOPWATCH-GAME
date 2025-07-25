@@ -21,16 +21,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Shuffle
-import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.components.AppBarActionItem
@@ -98,7 +95,7 @@ fun GameSelectionScreen(navController: NavHostController) {
                         onClick = {
                             val randomGame = games.random()
                             appViewModel.selectGame(randomGame.id)
-                            navController.navigate(Routes.GamePlay(randomGame))
+                            navController.navigate(Routes.GamePlay(randomGame.id))
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -131,7 +128,7 @@ fun GameSelectionScreen(navController: NavHostController) {
                         game = game,
                         onClick = {
                             appViewModel.selectGame(game.id)
-                            navController.navigate(Routes.GamePlay(game))
+                            navController.navigate(Routes.GamePlay(game.id))
                         }
                     )
                 }
