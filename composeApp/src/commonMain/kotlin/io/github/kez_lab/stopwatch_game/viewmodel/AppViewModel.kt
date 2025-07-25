@@ -93,7 +93,7 @@ class AppViewModel : ViewModel() {
                     currentResults.sortedByDescending { (_, result) ->
                         val first = result.specialValue
                         val second = result.specialValue2 ?: -1
-                        if (first != -1 && second != -1) first * second else Int.MAX_VALUE
+                        if (first != -1 && second != -1) first * second else 0
                     }
                 }
                 GameType.RandomMS -> {
