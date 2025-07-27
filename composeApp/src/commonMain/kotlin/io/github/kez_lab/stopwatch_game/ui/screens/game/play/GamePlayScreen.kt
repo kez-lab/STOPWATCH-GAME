@@ -1,5 +1,13 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.game.play
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -44,6 +52,79 @@ internal sealed class GamePlayRoutes(val route: String) {
 }
 
 /**
+ * 게임 플로우에 맞는 진입 애니메이션
+ */
+private fun getEnterTransition(from: String?, to: String?) = when {
+    // Ready → Countdown: 아래에서 위로 슬라이드 (준비 → 집중)
+    from == GamePlayRoutes.Ready.route && to == GamePlayRoutes.Countdown.route ->
+        slideInVertically(
+            animationSpec = tween(durationMillis = 400),
+            initialOffsetY = { it }
+        ) + fadeIn(animationSpec = tween(durationMillis = 400))
+
+    // Countdown → Playing: 스케일 + 페이드 (긴장감 증가)
+    from == GamePlayRoutes.Countdown.route && to == GamePlayRoutes.Playing.route ->
+        scaleIn(
+            animationSpec = tween(durationMillis = 500),
+            initialScale = 0.8f
+        ) + fadeIn(animationSpec = tween(durationMillis = 500))
+
+    // Playing → Result: 오른쪽에서 슬라이드 (결과 확인)
+    from == GamePlayRoutes.Playing.route && to == GamePlayRoutes.Result.route ->
+        slideInHorizontally(
+            animationSpec = tween(durationMillis = 600),
+            initialOffsetX = { it }
+        ) + fadeIn(animationSpec = tween(durationMillis = 600))
+
+    from == GamePlayRoutes.Result.route && to == GamePlayRoutes.Ready.route ->
+        slideInHorizontally(
+            animationSpec = tween(durationMillis = 100),
+            initialOffsetX = { -it }
+        ) + fadeIn(animationSpec = tween(durationMillis = 100))
+
+    // 기본: 페이드인
+    else -> fadeIn(animationSpec = tween(durationMillis = 300))
+}
+
+/**
+ * 게임 플로우에 맞는 퇴장 애니메이션
+ */
+private fun getExitTransition(from: String?, to: String?) = when {
+    // Ready → Countdown: 위로 슬라이드 아웃
+    from == GamePlayRoutes.Ready.route && to == GamePlayRoutes.Countdown.route ->
+        slideOutVertically(
+            animationSpec = tween(durationMillis = 400),
+            targetOffsetY = { -it }
+        ) + fadeOut(animationSpec = tween(durationMillis = 400))
+
+    // Countdown → Playing: 스케일 축소 + 페이드
+    from == GamePlayRoutes.Countdown.route && to == GamePlayRoutes.Playing.route ->
+        scaleOut(
+            animationSpec = tween(durationMillis = 500),
+            targetScale = 1.2f
+        ) + fadeOut(animationSpec = tween(durationMillis = 500))
+
+    // 기본: 페이드아웃
+    else -> fadeOut(animationSpec = tween(durationMillis = 300))
+}
+
+/**
+ * 뒤로가기 시 진입 애니메이션
+ */
+private fun getPopEnterTransition(from: String?, to: String?) = when {
+    // 뒤로가기는 부드러운 페이드인으로 통일
+    else -> fadeIn(animationSpec = tween(durationMillis = 300))
+}
+
+/**
+ * 뒤로가기 시 퇴장 애니메이션
+ */
+private fun getPopExitTransition(from: String?, to: String?) = when {
+    // 뒤로가기는 부드러운 페이드아웃으로 통일
+    else -> fadeOut(animationSpec = tween(durationMillis = 300))
+}
+
+/**
  * 게임 플레이 화면 (중첩 네비게이션 호스트)
  */
 @Composable
@@ -71,13 +152,13 @@ fun GamePlayScreen(
 
     // 다음 플레이어로 이동
     val moveToNextPlayer = {
-        if (appViewModel.moveToNextPlayer()) {
-            timerViewModel.resetTimer()
-            // ReadyScreen으로 돌아가기 (백스택 초기화)
-            nestedNavController.navigate(GamePlayRoutes.Ready.route) {
-                popUpTo(nestedNavController.graph.startDestinationId) { inclusive = true }
-            }
-        } else {
+        // 먼저 네비게이션 처리
+        nestedNavController.navigate(GamePlayRoutes.Ready.route) {
+            popUpTo(nestedNavController.graph.startDestinationId) { inclusive = true }
+        }
+
+        // 네비게이션 후에 플레이어 변경
+        if (!appViewModel.moveToNextPlayer()) {
             finishGame()
         }
     }
@@ -106,7 +187,7 @@ fun GamePlayScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -132,7 +213,31 @@ fun GamePlayScreen(
             // 중첩 NavHost
             NavHost(
                 navController = nestedNavController,
-                startDestination = GamePlayRoutes.Ready.route
+                startDestination = GamePlayRoutes.Ready.route,
+                enterTransition = {
+                    getEnterTransition(
+                        initialState.destination.route,
+                        targetState.destination.route
+                    )
+                },
+                exitTransition = {
+                    getExitTransition(
+                        initialState.destination.route,
+                        targetState.destination.route
+                    )
+                },
+                popEnterTransition = {
+                    getPopEnterTransition(
+                        initialState.destination.route,
+                        targetState.destination.route
+                    )
+                },
+                popExitTransition = {
+                    getPopExitTransition(
+                        initialState.destination.route,
+                        targetState.destination.route
+                    )
+                }
             ) {
                 composable(GamePlayRoutes.Ready.route) {
                     ReadyScreen(
