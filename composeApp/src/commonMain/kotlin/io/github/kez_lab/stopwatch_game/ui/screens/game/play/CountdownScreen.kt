@@ -3,6 +3,7 @@ package io.github.kez_lab.stopwatch_game.ui.screens.game.play
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -35,13 +36,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import androidx.navigation.NavController
+import io.github.kez_lab.stopwatch_game.theme.AppTheme
 import io.github.kez_lab.stopwatch_game.viewmodel.GameTimerViewModel
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 internal fun CountdownScreen(
     navController: NavController,
     timerViewModel: GameTimerViewModel,
+) {
+    CountdownContent(
+        startTimer = {
+            timerViewModel.startTimer()
+        },
+        navigateToPlaying = {
+            navController.navigate(GamePlayRoutes.Playing.route) {
+                popUpTo(GamePlayRoutes.Countdown.route) { inclusive = true }
+            }
+        },
+        navigateToBack = {
+            navController.popBackStack()
+        }
+    )
+}
+
+@Composable
+private fun CountdownContent(
+    startTimer: () -> Unit,
+    navigateToPlaying: () -> Unit,
+    navigateToBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var countdown by remember { mutableStateOf(3) }
     val hapticFeedback = LocalHapticFeedback.current
@@ -51,11 +76,9 @@ internal fun CountdownScreen(
             delay(1000)
             countdown--
         }
-        timerViewModel.startTimer()
+        startTimer()
         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-        navController.navigate(GamePlayRoutes.Playing.route) {
-            popUpTo(GamePlayRoutes.Countdown.route) { inclusive = true }
-        }
+        navigateToPlaying()
     }
 
     // Animation
@@ -73,7 +96,7 @@ internal fun CountdownScreen(
     val countdownColor = MaterialTheme.colorScheme.primary
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .drawBehind {
                 drawCircle(
@@ -101,27 +124,30 @@ internal fun CountdownScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = if (countdown > 0) countdown.toString() else "GO!",
-                fontSize = 160.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = countdownColor,
-                modifier = Modifier
-                    .scale(scale)
-                    .alpha(alpha)
-                    .drawBehind {
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    countdownColor.copy(alpha = 0.3f),
-                                    Color.Transparent
+            if (countdown > 0) {
+                Text(
+                    text = countdown.toString(),
+                    fontSize = 160.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = countdownColor,
+                    modifier = Modifier
+                        .scale(scale)
+                        .alpha(alpha)
+                        .drawBehind {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        countdownColor.copy(alpha = 0.3f),
+                                        Color.Transparent
+                                    ),
+                                    radius = size.minDimension * 0.8f
                                 ),
-                                radius = size.minDimension * 0.8f
-                            ),
-                            radius = size.minDimension * 0.5f
-                        )
-                    }
-            )
+                                radius = size.minDimension * 0.5f
+                            )
+                        }
+                )
+            }
+
 
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -129,7 +155,7 @@ internal fun CountdownScreen(
             Button(
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    navController.popBackStack() // Go back to ReadyScreen
+                    navigateToBack()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -147,5 +173,18 @@ internal fun CountdownScreen(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun CountdownScreenPreview() {
+    AppTheme {
+        CountdownContent(
+            modifier = Modifier.fillMaxSize().background(Color.White),
+            startTimer = {},
+            navigateToPlaying = {},
+            navigateToBack = {}
+        )
     }
 }
