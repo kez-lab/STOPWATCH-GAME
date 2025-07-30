@@ -77,8 +77,13 @@ sqldelight/
 bin/
 gen/
 out/
+composeApp/release
 
 # Node.js
 *yarn.lock
 
 keystore
+
+# Claude
+CLAUDE.md
+.mcp.json

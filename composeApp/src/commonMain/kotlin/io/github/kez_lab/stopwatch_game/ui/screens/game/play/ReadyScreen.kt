@@ -29,11 +29,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.PlayCircle
 import compose.icons.feathericons.Target
 import compose.icons.feathericons.X
 import io.github.kez_lab.stopwatch_game.model.GameType
+import io.github.kez_lab.stopwatch_game.theme.AppTheme
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 internal fun ReadyScreen(
@@ -142,5 +145,28 @@ internal fun ReadyScreen(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun ReadyScreenPreview() {
+    AppTheme {
+        ReadyScreen(
+            navController = rememberNavController(),
+            game = GameType.RandomMS
+        )
+    }
+
+}
+
+@Preview
+@Composable
+private fun ReadyScreenCongPatPreview() {
+    AppTheme {
+        ReadyScreen(
+            navController = rememberNavController(),
+            game = GameType.CONG_PAT
+        )
     }
 }

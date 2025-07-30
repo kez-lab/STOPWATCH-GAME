@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,6 +28,7 @@ import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.components.AppBarActionItem
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
+import io.github.kez_lab.stopwatch_game.viewmodel.GamePlayViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.GameTimerViewModel
 
 /**
@@ -42,6 +40,7 @@ internal sealed class GamePlayRoutes(val route: String) {
     data object Playing : GamePlayRoutes("playing")
     data object Result : GamePlayRoutes("result")
 }
+
 
 /**
  * 게임 플레이 화면 (중첩 네비게이션 호스트)
@@ -55,43 +54,55 @@ fun GamePlayScreen(
     val appUiState by appViewModel.uiState.collectAsState()
 
     val timerViewModel: GameTimerViewModel = viewModel { GameTimerViewModel(gameType) }
+    val gamePlayViewModel: GamePlayViewModel = viewModel { GamePlayViewModel(appViewModel, gameType) }
     val uiState by timerViewModel.uiState.collectAsState()
     val game = uiState.game
 
     val nestedNavController = rememberNavController()
     var showBackConfirmation by rememberSaveable { mutableStateOf(false) }
 
-    // 게임 전체 종료 처리
-    val finishGame = {
-        appViewModel.calculateRanks()
-        navController.navigate(Routes.Result) {
-            popUpTo(Routes.GamePlay(gameType.id)) { inclusive = true }
-        }
-    }
-
-    // 다음 플레이어로 이동
-    val moveToNextPlayer = {
-        if (appViewModel.moveToNextPlayer()) {
-            timerViewModel.resetTimer()
-            // ReadyScreen으로 돌아가기 (백스택 초기화)
-            nestedNavController.navigate(GamePlayRoutes.Ready.route) {
-                popUpTo(nestedNavController.graph.startDestinationId) { inclusive = true }
+    // 이벤트 처리
+    LaunchedEffect(gamePlayViewModel) {
+        gamePlayViewModel.events.collect { event ->
+            when (event) {
+                is GamePlayEvent.NavigateToResult -> {
+                    appViewModel.calculateRanks()
+                    navController.navigate(Routes.Result) {
+                        popUpTo(Routes.GamePlay(gameType.id)) { inclusive = true }
+                    }
+                }
+                is GamePlayEvent.NavigateToReady -> {
+                    nestedNavController.navigate(GamePlayRoutes.Ready.route) {
+                        popUpTo(nestedNavController.graph.startDestinationId) { inclusive = true }
+                    }
+                }
+                is GamePlayEvent.PopBackStack -> {
+                    navController.popBackStack()
+                }
+                is GamePlayEvent.ShowBackConfirmation -> {
+                    showBackConfirmation = true
+                }
+                is GamePlayEvent.HideBackConfirmation -> {
+                    showBackConfirmation = false
+                }
             }
-        } else {
-            finishGame()
         }
     }
 
-    // 뒤로가기 처리
+    // ViewModel에서 로직 처리
+    val moveToNextPlayer = {
+        gamePlayViewModel.moveToNextPlayer()
+    }
+
     val handleBackPress = {
-        // 중첩 네비게이션의 현재 백스택에 화면이 1개만 남았는지 (즉, ReadyScreen인지) 확인
-        if (nestedNavController.previousBackStackEntry == null) {
-            navController.popBackStack()
+        val isAtRootLevel = nestedNavController.previousBackStackEntry == null
+        val currentRoute = nestedNavController.currentBackStackEntry?.destination?.route
+        
+        if (isAtRootLevel) {
+            gamePlayViewModel.handleBackPress(isAtRootLevel = true, currentRoute = null)
         } else {
-            // 플레이 중(카운트다운 포함) 뒤로가기 시 확인 다이얼로그 표시
-            val currentRoute = nestedNavController.currentBackStackEntry?.destination?.route
             if (currentRoute == GamePlayRoutes.Playing.route || currentRoute == GamePlayRoutes.Countdown.route) {
-                showBackConfirmation = true
+                gamePlayViewModel.handleBackPress(isAtRootLevel = false, currentRoute = currentRoute)
             } else {
                 nestedNavController.popBackStack()
             }
@@ -106,7 +117,7 @@ fun GamePlayScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -132,7 +143,25 @@ fun GamePlayScreen(
             // 중첩 NavHost
             NavHost(
                 navController = nestedNavController,
-                startDestination = GamePlayRoutes.Ready.route
+                startDestination = GamePlayRoutes.Ready.route,
+                enterTransition = {
+                    GamePlayAnimations.getEnterTransition(
+                        initialState.destination.route,
+                        targetState.destination.route
+                    )
+                },
+                exitTransition = {
+                    GamePlayAnimations.getExitTransition(
+                        initialState.destination.route,
+                        targetState.destination.route
+                    )
+                },
+                popEnterTransition = {
+                    GamePlayAnimations.getPopEnterTransition()
+                },
+                popExitTransition = {
+                    GamePlayAnimations.getPopExitTransition()
+                }
             ) {
                 composable(GamePlayRoutes.Ready.route) {
                     ReadyScreen(
@@ -164,22 +193,12 @@ fun GamePlayScreen(
 
         // 뒤로가기 확인 다이얼로그
         if (showBackConfirmation) {
-            AlertDialog(
-                onDismissRequest = { showBackConfirmation = false },
-                title = { Text("게임 종료") },
-                text = { Text("게임을 종료하시겠습니까?\n현재 진행 중인 게임 결과는 저장되지 않습니다.") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showBackConfirmation = false
-                            navController.popBackStack() // 상위 네비게이션으로 돌아감
-                        }
-                    ) { Text("종료") }
+            GameExitConfirmDialog(
+                onConfirm = {
+                    gamePlayViewModel.confirmGameExit()
                 },
-                dismissButton = {
-                    TextButton(onClick = { showBackConfirmation = false }) {
-                        Text("계속 진행")
-                    }
+                onDismiss = {
+                    gamePlayViewModel.cancelGameExit()
                 }
             )
         }

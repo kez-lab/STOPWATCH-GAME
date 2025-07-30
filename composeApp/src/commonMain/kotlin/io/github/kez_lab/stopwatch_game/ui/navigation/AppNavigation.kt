@@ -3,6 +3,8 @@ package io.github.kez_lab.stopwatch_game.ui.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -50,16 +52,28 @@ fun AppNavigation() {
         navController = navController,
         startDestination = Routes.Splash::class,
         enterTransition = {
-            fadeIn(animationSpec = tween(durationMillis = 150))
+            slideInHorizontally(
+                animationSpec = tween(durationMillis = 300),
+                initialOffsetX = { fullWidth -> fullWidth }
+            ) + fadeIn(animationSpec = tween(durationMillis = 300))
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(durationMillis = 150))
+            slideOutHorizontally(
+                animationSpec = tween(durationMillis = 300),
+                targetOffsetX = { fullWidth -> -fullWidth }
+            ) + fadeOut(animationSpec = tween(durationMillis = 300))
         },
         popEnterTransition = {
-            fadeIn(animationSpec = tween(durationMillis = 150))
+            slideInHorizontally(
+                animationSpec = tween(durationMillis = 300),
+                initialOffsetX = { fullWidth -> -fullWidth }
+            ) + fadeIn(animationSpec = tween(durationMillis = 300))
         },
         popExitTransition = {
-            fadeOut(animationSpec = tween(durationMillis = 150))
+            slideOutHorizontally(
+                animationSpec = tween(durationMillis = 300),
+                targetOffsetX = { fullWidth -> fullWidth }
+            ) + fadeOut(animationSpec = tween(durationMillis = 300))
         }
     ) {
         composable<Routes.Splash> {

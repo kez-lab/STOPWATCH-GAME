@@ -47,7 +47,14 @@ internal fun ResultScreen(
 ) {
     val appViewModel: AppViewModel = LocalAppViewModel.current
     val appUiState by appViewModel.uiState.collectAsState()
-    val gameResult = appUiState.currentPlayer?.gameResults?.lastOrNull()
+
+    // 현재 플레이어에 대한 결과를 바꿀 필요가 없기에 remember로 최적화
+    // remember 제외 시 화면 이동 중간에 결과가 바뀌는 경우가 발생할 수 있음
+    val gameResult = remember {
+        appUiState.currentGameResults.lastOrNull { (player, _) ->
+            player.id == appUiState.currentPlayer?.id
+        }?.second
+    }
 
     // Animation
     val animationProgress = remember { Animatable(0f) }
