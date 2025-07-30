@@ -54,7 +54,7 @@ fun GamePlayScreen(
     val appUiState by appViewModel.uiState.collectAsState()
 
     val timerViewModel: GameTimerViewModel = viewModel { GameTimerViewModel(gameType) }
-    val gamePlayViewModel: GamePlayViewModel = viewModel { GamePlayViewModel(appViewModel, gameType) }
+    val gamePlayViewModel: GamePlayViewModel = viewModel { GamePlayViewModel() }
     val uiState by timerViewModel.uiState.collectAsState()
     val game = uiState.game
 
@@ -91,7 +91,7 @@ fun GamePlayScreen(
 
     // ViewModel에서 로직 처리
     val moveToNextPlayer = {
-        gamePlayViewModel.moveToNextPlayer()
+        gamePlayViewModel.moveToNextPlayer(appViewModel.moveToNextPlayer())
     }
 
     val handleBackPress = {
