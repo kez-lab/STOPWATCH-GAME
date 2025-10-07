@@ -41,11 +41,7 @@ import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 @Composable
 fun GameSelectionScreen(navController: NavHostController) {
     val appViewModel = LocalAppViewModel.current
-
-    // 게임 목록
     val games = remember { GameType.entries.toList() }
-
-    // 랜덤 선택 버튼 상태
     val showRandomConfirm = remember { mutableStateOf(false) }
 
     Box(
@@ -56,31 +52,22 @@ fun GameSelectionScreen(navController: NavHostController) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // 공통 AppBar 사용
             AppBar(
                 title = "게임 선택",
                 onBackClick = { navController.popBackStack() },
                 actions = {
-                    // 랜덤 선택 버튼
                     AppBarActionItem(
                         icon = FeatherIcons.Shuffle,
                         contentDescription = "랜덤 선택",
-                        onClick = { showRandomConfirm.value = true }
+                        onClick = {
+                            showRandomConfirm.value = !showRandomConfirm.value
+                        }
                     )
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 안내 문구
-            Text(
-                text = "플레이할 미니게임을 선택해주세요",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            // 랜덤 선택 확인 UI
             AnimatedVisibility(
                 visible = showRandomConfirm.value,
                 enter = fadeIn(),
@@ -119,7 +106,6 @@ fun GameSelectionScreen(navController: NavHostController) {
                 }
             }
 
-            // 게임 목록
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
