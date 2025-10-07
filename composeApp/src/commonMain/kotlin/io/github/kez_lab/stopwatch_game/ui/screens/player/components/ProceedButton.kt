@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowRight
 
@@ -31,8 +30,8 @@ fun ProceedButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .height(60.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .height(56.dp),
         shape = MaterialTheme.shapes.medium
     ) {
         Row(
@@ -42,12 +41,12 @@ fun ProceedButton(
         ) {
             Text(
                 text = text,
-                fontSize = 18.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(20.dp),
                 imageVector = FeatherIcons.ArrowRight,
                 contentDescription = null
             )
