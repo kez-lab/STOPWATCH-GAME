@@ -1,7 +1,6 @@
 package io.github.kez_lab.stopwatch_game.ui.screens.player.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,11 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Trash2
 import compose.icons.feathericons.User
 import io.github.kez_lab.stopwatch_game.model.Player
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun PlayerItem(
@@ -36,30 +35,31 @@ fun PlayerItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .border(BorderStroke(2.dp, Color.Black), shape = RoundedCornerShape(12.dp)),
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = Color.White
+        ),
+        border = BorderStroke(1.dp, Color.Black)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = FeatherIcons.User,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
             Text(
                 text = player.name,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
@@ -70,9 +70,18 @@ fun PlayerItem(
                     imageVector = FeatherIcons.Trash2,
                     contentDescription = "삭제",
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PlayerItemPreview() {
+    PlayerItem(
+        player = Player(name = "Player 1"),
+        onRemove = {}
+    )
 }

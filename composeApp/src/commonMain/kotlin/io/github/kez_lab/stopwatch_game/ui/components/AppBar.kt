@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.User
@@ -51,7 +50,7 @@ fun AppBar(
     Column(modifier = modifier.fillMaxWidth()) {
         // 상단 앱바 (제목 및 네비게이션)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 왼쪽 영역 (네비게이션 버튼)
@@ -73,7 +72,7 @@ fun AppBar(
                     }
                 }
             }
-            
+
             // 중앙 영역 (제목)
             Box(
                 modifier = Modifier.weight(2f),
@@ -81,12 +80,12 @@ fun AppBar(
             ) {
                 Text(
                     text = title,
-                    fontSize = 22.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
             }
-            
+
             // 오른쪽 영역 (액션 버튼들)
             Box(
                 modifier = Modifier.weight(1f),
@@ -125,7 +124,7 @@ fun AppBar(
 
                     Text(
                         text = currentPlayer.name,
-                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )

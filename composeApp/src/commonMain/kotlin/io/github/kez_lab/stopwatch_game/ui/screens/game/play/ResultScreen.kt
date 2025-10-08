@@ -3,6 +3,7 @@ package io.github.kez_lab.stopwatch_game.ui.screens.game.play
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,17 +29,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kez_lab.stopwatch_game.model.GameResult
 import io.github.kez_lab.stopwatch_game.model.GameType
+import io.github.kez_lab.stopwatch_game.theme.AppTheme
 import io.github.kez_lab.stopwatch_game.ui.components.TimerDisplay
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
 import io.github.kez_lab.stopwatch_game.viewmodel.AppViewModel
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 internal fun ResultScreen(
@@ -48,14 +53,25 @@ internal fun ResultScreen(
     val appViewModel: AppViewModel = LocalAppViewModel.current
     val appUiState by appViewModel.uiState.collectAsState()
 
-    // 현재 플레이어에 대한 결과를 바꿀 필요가 없기에 remember로 최적화
-    // remember 제외 시 화면 이동 중간에 결과가 바뀌는 경우가 발생할 수 있음
     val gameResult = remember {
         appUiState.currentGameResults.lastOrNull { (player, _) ->
             player.id == appUiState.currentPlayer?.id
         }?.second
     }
 
+    ResultContent(
+        game = game,
+        gameResult = gameResult,
+        onNextPlayer = onNextPlayer
+    )
+}
+
+@Composable
+private fun ResultContent(
+    game: GameType,
+    gameResult: GameResult?,
+    onNextPlayer: () -> Unit
+) {
     // Animation
     val animationProgress = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
@@ -78,10 +94,9 @@ internal fun ResultScreen(
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
         if (gameResult != null) {
-            // Result status text
             Box(
                 modifier = Modifier.graphicsLayer {
                     alpha = animationProgress.value
@@ -90,18 +105,16 @@ internal fun ResultScreen(
                 }
             ) {
                 val text = "완료!"
-                val color = MaterialTheme.colorScheme.tertiary
                 Text(
                     text = text,
                     fontSize = 40.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = color,
+                    color = Color.Black,
                 )
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Result time display
             Box(
                 modifier = Modifier.graphicsLayer { alpha = animationProgress.value }
             ) {
@@ -135,7 +148,7 @@ internal fun ResultScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         ResultCard("곱셈 결과", "$first × $second = $total")
                     } else {
-                        ResultCard("오류", "게임 데이터를 불러올 수 없습니다", isEmphasized = true)
+                        ResultCard("오류", "게임 데이터를 불러올 수 없습니다")
                     }
                 }
             }
@@ -168,15 +181,10 @@ internal fun ResultScreen(
 }
 
 @Composable
-private fun ResultCard(title: String, value: String, isEmphasized: Boolean = false) {
-    val containerColor =
-        if (isEmphasized) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer
-    val contentColor =
-        if (isEmphasized) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-
+private fun ResultCard(title: String, value: String) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = containerColor,
+            containerColor = Color.White,
         ),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -185,12 +193,14 @@ private fun ResultCard(title: String, value: String, isEmphasized: Boolean = fal
                 elevation = 12.dp,
                 shape = RoundedCornerShape(16.dp),
                 spotColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
-            )
+            ),
+        border = BorderStroke(1.dp, Color.Black)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val contentColor = Color.Black
             Text(
                 text = title,
                 fontSize = 14.sp,
@@ -204,6 +214,47 @@ private fun ResultCard(title: String, value: String, isEmphasized: Boolean = fal
                 color = contentColor
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun ResultContentPreview() {
+    AppTheme {
+        ResultContent(
+            game = GameType.RandomMS,
+            gameResult = GameResult(
+                gameId = "random_ms",
+                timeTaken = 5432L,
+                targetTime = 5000L,
+                formattedTime = "00:05.432",
+                specialValue = 7,
+                rank = 1,
+                isWinner = true
+            ),
+            onNextPlayer = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ResultContentPreviewCongPat() {
+    AppTheme {
+        ResultContent(
+            game = GameType.CONG_PAT,
+            gameResult = GameResult(
+                gameId = "cong_pat",
+                timeTaken = 3214L,
+                targetTime = 0L,
+                formattedTime = "00:03.214",
+                specialValue = 2,
+                specialValue2 = 1,
+                rank = 1,
+                isWinner = false
+            ),
+            onNextPlayer = {}
+        )
     }
 }
 

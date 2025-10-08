@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,12 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,7 +53,6 @@ import io.github.kez_lab.stopwatch_game.model.Player
 import io.github.kez_lab.stopwatch_game.ui.components.AppBar
 import io.github.kez_lab.stopwatch_game.ui.navigation.Routes
 import io.github.kez_lab.stopwatch_game.ui.viewmodel.LocalAppViewModel
-import kotlinx.coroutines.delay
 
 /**
  * 결과 화면
@@ -70,11 +64,6 @@ fun ResultScreen(navController: NavHostController) {
     // 앱 상태
     val uiState by appViewModel.uiState.collectAsState()
 
-    // 화면 상태
-    var showPunishment by remember { mutableStateOf(false) }
-    var showCongrats by remember { mutableStateOf(true) }
-
-    // 게임 선택으로 돌아가기
     val navigateToGameSelection = {
         navController.navigate(Routes.GameSelection) {
             launchSingleTop = true
@@ -84,22 +73,9 @@ fun ResultScreen(navController: NavHostController) {
         }
     }
 
-    // 벌칙 선택
-    LaunchedEffect(Unit) {
-        delay(3000)
-        appViewModel.selectRandomPunishment()
-        showCongrats = false
-        delay(500)
-        showPunishment = true
-    }
-
-    // 결과 정보
     val gameResults = uiState.rankedResults
     val selectedGame = uiState.selectedGame
-
-    // 승자/패자
     val winner = gameResults.firstOrNull()?.first
-    val loser = gameResults.lastOrNull()?.first
 
     Box(
         modifier = Modifier
@@ -132,7 +108,7 @@ fun ResultScreen(navController: NavHostController) {
 
             // 축하 화면
             AnimatedVisibility(
-                visible = showCongrats,
+                visible = true,
                 enter = fadeIn(animationSpec = tween(500)),
                 exit = fadeOut(animationSpec = tween(500))
             ) {
@@ -141,24 +117,8 @@ fun ResultScreen(navController: NavHostController) {
                 }
             }
 
-            // 벌칙 화면
-            AnimatedVisibility(
-                visible = showPunishment,
-                enter = fadeIn(animationSpec = tween(500)),
-                exit = fadeOut(animationSpec = tween(500))
-            ) {
-                if (loser != null && uiState.selectedPunishment != null) {
-                    PunishmentCard(
-                        playerName = loser.name,
-                        punishmentName = uiState.selectedPunishment!!.name,
-                        punishmentDescription = uiState.selectedPunishment!!.description
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 결과 목록
             Text(
                 text = "순위표",
                 fontSize = 18.sp,
@@ -289,82 +249,6 @@ private fun WinnerCelebration(player: Player) {
 }
 
 /**
- * 벌칙 카드 컴포넌트
- */
-@Composable
-private fun PunishmentCard(
-    playerName: String,
-    punishmentName: String,
-    punishmentDescription: String
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "꼴찌 벌칙",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = playerName,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = punishmentName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = punishmentDescription,
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
  * 결과 아이템 컴포넌트
  */
 @Composable
@@ -438,7 +322,7 @@ private fun ResultItem(
                 game == GameType.CONG_PAT && specialValue2 != null -> {
                     val first = specialValue
                     val second = specialValue2
-                    val total = if(first != -1 && second != -1) first * second else 0
+                    val total = if (first != -1 && second != -1) first * second else 0
                     Text(
                         text = "$first × $second = ",
                         fontSize = 16.sp,
@@ -452,6 +336,7 @@ private fun ResultItem(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
+
                 game == GameType.RandomMS && specialValue >= 0 -> {
                     Icon(
                         imageVector = FeatherIcons.Award,
@@ -467,6 +352,7 @@ private fun ResultItem(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
+
                 else -> {
                     Icon(
                         imageVector = FeatherIcons.Clock,

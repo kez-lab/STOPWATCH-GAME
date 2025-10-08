@@ -6,8 +6,6 @@ import io.github.kez_lab.stopwatch_game.model.GameRepository
 import io.github.kez_lab.stopwatch_game.model.GameResult
 import io.github.kez_lab.stopwatch_game.model.GameType
 import io.github.kez_lab.stopwatch_game.model.Player
-import io.github.kez_lab.stopwatch_game.model.Punishment
-import io.github.kez_lab.stopwatch_game.model.PunishmentRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -96,10 +94,12 @@ class AppViewModel : ViewModel() {
                         if (first != -1 && second != -1) first * second else 0
                     }
                 }
+
                 GameType.RandomMS -> {
                     // ms 끝자리 숫자가 큰 순서로 정렬
                     currentResults.sortedByDescending { (_, result) -> result.specialValue }
                 }
+
                 else -> {
                     // 기본: 시간�� 적게 걸린 순서로 정렬
                     currentResults.sortedBy { (_, result) -> result.timeTaken }
@@ -133,19 +133,9 @@ class AppViewModel : ViewModel() {
                         )
                     }
                 } else {
-                     _uiState.update { it.copy(rankedResults = rankedResults) }
+                    _uiState.update { it.copy(rankedResults = rankedResults) }
                 }
             }
-        }
-    }
-
-    // 벌칙 선택
-    fun selectRandomPunishment() {
-        val punishment = PunishmentRepository.getRandomPunishment()
-        _uiState.update { currentState ->
-            currentState.copy(
-                selectedPunishment = punishment
-            )
         }
     }
 
@@ -156,66 +146,10 @@ class AppViewModel : ViewModel() {
                 currentGameResults = emptyList(),
                 rankedResults = emptyList(),
                 selectedGame = null,
-                selectedPunishment = null,
                 currentPlayerIndex = 0
             )
         }
     }
-
-    // 현재 플레이어의 마지막 게임 결과 제거
-    fun removeLastPlayerResult() {
-        val currentPlayerIndex = _uiState.value.currentPlayerIndex
-        val updatedPlayers = _uiState.value.players.toMutableList()
-
-        // 현재 플레이어의 마지막 결과 제거
-        if (currentPlayerIndex < updatedPlayers.size) {
-            val currentPlayer = updatedPlayers[currentPlayerIndex]
-            if (currentPlayer.gameResults.isNotEmpty()) {
-                // 마지막 결과 복사본 만들기
-                val updatedResults = currentPlayer.gameResults.toMutableList()
-                // 마지막 결과 제거
-                updatedResults.removeAt(updatedResults.size - 1)
-
-                // 현재 플레이어 업데이트
-                updatedPlayers[currentPlayerIndex] = currentPlayer.copy(
-                    gameResults = updatedResults
-                )
-            }
-        }
-
-        // 현재 게임 결과 목록에서도 해당 결과 제거
-        val updatedGameResults = _uiState.value.currentGameResults.toMutableList()
-        if (updatedGameResults.isNotEmpty()) {
-            // 마지막에 추가된 현재 플레이어의 결과를 제거
-            // 여러 플레이어가 있을 경우 현재 플레이어의 결과만 제거
-            val playerResults = updatedGameResults.filter { (player, _) ->
-                updatedPlayers.indexOf(player) == currentPlayerIndex
-            }
-
-            if (playerResults.isNotEmpty()) {
-                // 현재 플레이어의 마지막 결과 제거
-                updatedGameResults.remove(playerResults.last())
-            }
-        }
-
-        _uiState.update { currentState ->
-            currentState.copy(
-                players = updatedPlayers,
-                currentGameResults = updatedGameResults,
-                // 랭킹 결과도 초기화
-                rankedResults = emptyList()
-            )
-        }
-    }
-}
-
-/**
- * 플레이어 추가 결과 클래스
- */
-sealed class PlayerAddResult {
-    data object EmptyName : PlayerAddResult()
-    data object DuplicateName : PlayerAddResult()
-    data class Success(val player: Player) : PlayerAddResult()
 }
 
 /**
@@ -227,7 +161,6 @@ data class AppUiState(
     val selectedGame: GameType? = null,
     val currentGameResults: List<Pair<Player, GameResult>> = emptyList(),
     val rankedResults: List<Pair<Player, GameResult>> = emptyList(),
-    val selectedPunishment: Punishment? = null
 ) {
     val currentPlayer: Player?
         get() = if (players.isNotEmpty() && currentPlayerIndex < players.size) {

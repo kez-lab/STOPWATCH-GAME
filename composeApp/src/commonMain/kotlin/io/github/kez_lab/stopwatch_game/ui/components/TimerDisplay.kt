@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.kez_lab.stopwatch_game.theme.AppTheme
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * 게임용 타이머 디스플레이 컴포넌트
@@ -112,52 +114,7 @@ fun TimerDisplay(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 32.dp, horizontal = 16.dp)
-                    .drawBehind {
-                        // 게임 느낌의 디지털 타이머 배경 그리기
-                        if (isRunning || isFinished) {
-                            // 내부 글로우 효과
-                            drawRoundRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        glowColor,
-                                        Color.Transparent,
-                                    ),
-                                    center = Offset(size.width / 2, size.height / 2),
-                                    radius = size.width * 0.8f
-                                ),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(16f, 16f),
-                                alpha = 0.7f
-                            )
-
-                            // 디지털 타이머 그리드 라인
-                            val gridLineColor = timerColor.copy(alpha = 0.1f)
-                            val gridSpacing = size.height / 8
-
-                            // 수평선
-                            for (i in 0..8) {
-                                val y = i * gridSpacing
-                                drawLine(
-                                    color = gridLineColor,
-                                    start = Offset(0f, y),
-                                    end = Offset(size.width, y),
-                                    strokeWidth = 1f
-                                )
-                            }
-
-                            // 수직선
-                            val verticalSpacing = size.width / 10
-                            for (i in 0..10) {
-                                val x = i * verticalSpacing
-                                drawLine(
-                                    color = gridLineColor,
-                                    start = Offset(x, 0f),
-                                    end = Offset(x, size.height),
-                                    strokeWidth = 1f
-                                )
-                            }
-                        }
-                    },
+                    .padding(vertical = 32.dp, horizontal = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -172,5 +129,53 @@ fun TimerDisplay(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun TimerDisplayPreviewIdle() {
+    AppTheme {
+        TimerDisplay(
+            displayTime = "00:00.000",
+            isRunning = false,
+            isFinished = false
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TimerDisplayPreviewRunning() {
+    AppTheme {
+        TimerDisplay(
+            displayTime = "00:05.432",
+            isRunning = true,
+            isFinished = false
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TimerDisplayPreviewFinished() {
+    AppTheme {
+        TimerDisplay(
+            displayTime = "00:10.987",
+            isRunning = false,
+            isFinished = true
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TimerDisplayPreviewTimeout() {
+    AppTheme {
+        TimerDisplay(
+            displayTime = "TIME OUT",
+            isRunning = false,
+            isFinished = true
+        )
     }
 }

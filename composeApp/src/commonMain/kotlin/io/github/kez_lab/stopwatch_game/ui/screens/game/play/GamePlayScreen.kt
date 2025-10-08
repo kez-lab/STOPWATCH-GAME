@@ -140,7 +140,6 @@ fun GamePlayScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 중첩 NavHost
             NavHost(
                 navController = nestedNavController,
                 startDestination = GamePlayRoutes.Ready.route,
