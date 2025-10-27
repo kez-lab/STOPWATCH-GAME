@@ -30,7 +30,7 @@ jobs:
         run: ./gradlew :composeApp:testDebugUnitTest
       
       - name: Upload test reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()  # 테스트 실패해도 보고서 업로드
         with:
           name: test-reports
